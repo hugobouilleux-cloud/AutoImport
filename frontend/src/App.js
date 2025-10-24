@@ -99,6 +99,32 @@ const Home = () => {
     }
   };
 
+  const navigateToAdmin = async () => {
+    if (!formData.site_url || !formData.login || !formData.password) {
+      toast.error("Veuillez remplir tous les champs");
+      return;
+    }
+
+    setNavigating(true);
+    setAdminUrl(null);
+
+    try {
+      const response = await axios.post(`${API}/connection/navigate-admin`, formData);
+      
+      if (response.data.success) {
+        toast.success("Navigation vers l'administration réussie !");
+        setAdminUrl(response.data.admin_url);
+      } else {
+        toast.error(response.data.message);
+      }
+    } catch (error) {
+      console.error("Error navigating to admin:", error);
+      toast.error("Erreur lors de la navigation");
+    } finally {
+      setNavigating(false);
+    }
+  };
+
   return (
     <div className="min-h-screen" data-testid="home-page">
       <Toaster position="top-right" />
