@@ -351,54 +351,28 @@ const Home = () => {
               <CardContent className="pt-6 space-y-6">
                 {/* Format Selection */}
                 <div className="space-y-3">
-                  <Label className="text-gray-700 font-medium text-base">Choisissez le format du fichier</Label>
-                  <div className="grid grid-cols-3 gap-4">
+                  <Label className="text-gray-700 font-medium text-base">Format du fichier : Excel uniquement</Label>
+                  <div className="grid grid-cols-1 gap-4 max-w-xs">
                     <div
                       onClick={() => setFileFormat('excel')}
-                      className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                        fileFormat === 'excel'
-                          ? 'border-emerald-500 bg-emerald-50'
-                          : 'border-gray-200 hover:border-emerald-300 hover:bg-gray-50'
-                      }`}
+                      className="p-6 rounded-lg border-2 border-emerald-500 bg-emerald-50 cursor-pointer"
                       data-testid="format-excel"
                     >
                       <div className="flex flex-col items-center gap-2">
-                        <FileSpreadsheet className={`w-8 h-8 ${fileFormat === 'excel' ? 'text-emerald-600' : 'text-gray-400'}`} />
-                        <span className="font-medium text-gray-900">Excel</span>
-                        <span className="text-xs text-gray-500">.xlsx, .xls</span>
-                      </div>
-                    </div>
-                    <div
-                      onClick={() => setFileFormat('word')}
-                      className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                        fileFormat === 'word'
-                          ? 'border-blue-500 bg-blue-50'
-                          : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
-                      }`}
-                      data-testid="format-word"
-                    >
-                      <div className="flex flex-col items-center gap-2">
-                        <FileText className={`w-8 h-8 ${fileFormat === 'word' ? 'text-blue-600' : 'text-gray-400'}`} />
-                        <span className="font-medium text-gray-900">Word</span>
-                        <span className="text-xs text-gray-500">.docx, .doc</span>
-                      </div>
-                    </div>
-                    <div
-                      onClick={() => setFileFormat('pdf')}
-                      className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                        fileFormat === 'pdf'
-                          ? 'border-red-500 bg-red-50'
-                          : 'border-gray-200 hover:border-red-300 hover:bg-gray-50'
-                      }`}
-                      data-testid="format-pdf"
-                    >
-                      <div className="flex flex-col items-center gap-2">
-                        <FileText className={`w-8 h-8 ${fileFormat === 'pdf' ? 'text-red-600' : 'text-gray-400'}`} />
-                        <span className="font-medium text-gray-900">PDF</span>
-                        <span className="text-xs text-gray-500">.pdf</span>
+                        <FileSpreadsheet className="w-10 h-10 text-emerald-600" />
+                        <span className="font-medium text-gray-900 text-lg">Excel</span>
+                        <span className="text-sm text-gray-600">.xlsx, .xls</span>
+                        <span className="text-xs text-gray-500 mt-2 text-center">
+                          Une colonne par champ, une ligne par donnée
+                        </span>
                       </div>
                     </div>
                   </div>
+                  <Alert className="bg-blue-50 border-blue-200">
+                    <AlertDescription className="text-blue-700 text-sm">
+                      <strong>Note:</strong> Word et PDF seront disponibles prochainement
+                    </AlertDescription>
+                  </Alert>
                 </div>
 
                 {/* File Upload */}
