@@ -197,20 +197,7 @@ async def navigate_to_admin(connection_data: ConnectionTest):
                 await asyncio.sleep(0.5)
                 
                 # Étape 3: Soumettre le formulaire
-                submit_selectors = [
-                    'button[type="submit"]',
-                    'input[type="submit"]',
-                    'button:has-text("Connexion")',
-                    'button:has-text("Login")',
-                    'button:has-text("Se connecter")'
-                ]
-                
-                for selector in submit_selectors:
-                    try:
-                        await page.click(selector, timeout=2000)
-                        break
-                    except:
-                        continue
+                await page.click('button[type="submit"]:has-text("Connexion")', timeout=5000)
                 
                 # Attendre la navigation
                 await page.wait_for_load_state("networkidle", timeout=15000)
