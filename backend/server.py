@@ -589,6 +589,185 @@ async def select_format_in_table(request: SelectFormatRequest):
             format_url=None
         )
 
+@api_router.post("/connection/extract-table", response_model=TableExtractionResult)
+async def extract_format_table(request: SelectFormatRequest):
+    """
+    Extract the configuration table after selecting a format
+    """
+    try:
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(headless=True, args=['--no-sandbox', '--disable-setuid-sandbox'])
+            context = await browser.new_context(
+                ignore_https_errors=True,
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+            )
+            page = await context.new_page()
+            
+            try:
+                # Étape 1: Connexion
+                await page.goto(request.site_url, timeout=30000, wait_until="networkidle")
+                await asyncio.sleep(1)
+                
+                await page.fill('input[name="j_username"]', request.login, timeout=5000)
+                await asyncio.sleep(0.5)
+                await page.fill('input[name="j_password"]', request.password, timeout=5000)
+                await asyncio.sleep(1)
+                
+                await page.wait_for_selector('button[type="submit"]:not([disabled])', timeout=10000)
+                await asyncio.sleep(0.5)
+                await page.click('button[type="submit"]', timeout=5000)
+                
+                await page.wait_for_load_state("networkidle", timeout=15000)
+                await asyncio.sleep(2)
+                
+                # Cliquer sur l'icône utilisateur
+                await page.click('.icon-user', timeout=5000)
+                await asyncio.sleep(1)
+                
+                # Cliquer sur Administration
+                await page.wait_for_selector('button[mat-menu-item]', timeout=5000)
+                await page.click('button.user-menu-item:has-text("Administration")', timeout=5000)
+                await page.wait_for_load_state("networkidle", timeout=15000)
+                await asyncio.sleep(2)
+                
+                # Cliquer sur "Import de données"
+                await page.click('a:has-text("Import de données")', timeout=10000)
+                await page.wait_for_load_state("networkidle", timeout=15000)
+                await asyncio.sleep(2)
+                
+                # Chercher et cliquer sur le format
+                format_name = request.selected_format.name
+                page_number = 1
+                format_found = False
+                
+                while not format_found:
+                    await page.wait_for_selector('app-link a.a', timeout=10000)
+                    await asyncio.sleep(1.5)
+                    
+                    format_clicked = await page.evaluate('''(formatName) => {
+                        const links = document.querySelectorAll('app-link a.a');
+                        for (let link of links) {
+                            if (link.textContent.trim() === formatName) {
+                                link.click();
+                                return true;
+                            }
+                        }
+                        return false;
+                    }''', format_name)
+                    
+                    if format_clicked:
+                        format_found = True
+                        await asyncio.sleep(3)
+                        await page.wait_for_load_state("networkidle", timeout=15000)
+                        break
+                    
+                    # Page suivante
+                    next_button_exists = await page.evaluate('''() => {
+                        const buttons = document.querySelectorAll('button.k-pager-nav');
+                        for (let btn of buttons) {
+                            const title = btn.getAttribute('title');
+                            const ariaLabel = btn.getAttribute('aria-label');
+                            if ((title === 'Page suivante' || ariaLabel === 'Page suivante') && 
+                                !btn.disabled && !btn.classList.contains('k-disabled')) {
+                                return true;
+                            }
+                        }
+                        return false;
+                    }''')
+                    
+                    if next_button_exists:
+                        await page.evaluate('''() => {
+                            const buttons = document.querySelectorAll('button.k-pager-nav');
+                            for (let btn of buttons) {
+                                const title = btn.getAttribute('title');
+                                const ariaLabel = btn.getAttribute('aria-label');
+                                if ((title === 'Page suivante' || ariaLabel === 'Page suivante') && 
+                                    !btn.disabled && !btn.classList.contains('k-disabled')) {
+                                    btn.click();
+                                    return;
+                                }
+                            }
+                        }''')
+                        await asyncio.sleep(2)
+                        await page.wait_for_load_state("networkidle", timeout=10000)
+                        page_number += 1
+                    else:
+                        await browser.close()
+                        return TableExtractionResult(
+                            success=False,
+                            message=f"Format '{format_name}' introuvable",
+                            headers=[],
+                            rows=[],
+                            total_rows=0
+                        )
+                
+                # Extraire le tableau
+                await page.wait_for_selector('table.k-grid-table', timeout=10000)
+                await asyncio.sleep(2)
+                
+                table_data = await page.evaluate('''() => {
+                    // Extraire les en-têtes
+                    const headers = [];
+                    const headerCells = document.querySelectorAll('thead.k-table-thead th.k-header span.k-column-title');
+                    headerCells.forEach(cell => {
+                        headers.push(cell.textContent.trim());
+                    });
+                    
+                    // Extraire les lignes
+                    const rows = [];
+                    const bodyRows = document.querySelectorAll('tbody.k-table-tbody tr.k-table-row');
+                    bodyRows.forEach(row => {
+                        const cells = [];
+                        const tds = row.querySelectorAll('td.k-table-td');
+                        tds.forEach(td => {
+                            // Extraire le texte ou vérifier les indicateurs bool
+                            const span = td.querySelector('span:not(.bool)');
+                            const boolIndicator = td.querySelector('span.bool');
+                            
+                            if (span && span.textContent.trim() !== '&nbsp;' && span.textContent.trim() !== '') {
+                                cells.push(span.textContent.trim());
+                            } else if (boolIndicator) {
+                                // val-1 = true (checked), val-2 = false (unchecked)
+                                const isChecked = boolIndicator.classList.contains('val-1');
+                                cells.push(isChecked ? 'Oui' : 'Non');
+                            } else {
+                                cells.push('');
+                            }
+                        });
+                        if (cells.length > 0) {
+                            rows.push({ cells: cells });
+                        }
+                    });
+                    
+                    return { headers, rows };
+                }''')
+                
+                await browser.close()
+                
+                logger.info(f"Table extracted: {len(table_data['headers'])} columns, {len(table_data['rows'])} rows")
+                
+                return TableExtractionResult(
+                    success=True,
+                    message=f"Tableau extrait avec succès: {len(table_data['rows'])} lignes",
+                    headers=table_data['headers'],
+                    rows=table_data['rows'],
+                    total_rows=len(table_data['rows'])
+                )
+                
+            except Exception as e:
+                await browser.close()
+                raise e
+                
+    except Exception as e:
+        logger.error(f"Extract table error: {str(e)}")
+        return TableExtractionResult(
+            success=False,
+            message=f"Erreur: {str(e)}",
+            headers=[],
+            rows=[],
+            total_rows=0
+        )
+
 # Include the router in the main app
 app.include_router(api_router)
 
