@@ -301,6 +301,108 @@ async def navigate_to_admin(connection_data: ConnectionTest):
             "admin_url": None
         }
 
+@api_router.post("/connection/extract-formats", response_model=ImportFormatsList)
+async def extract_import_formats(connection_data: ConnectionTest):
+    """
+    Extract all import formats from the admin page with pagination
+    """
+    try:
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(headless=True, args=['--no-sandbox', '--disable-setuid-sandbox'])
+            context = await browser.new_context(
+                ignore_https_errors=True,
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+            )
+            page = await context.new_page()
+            
+            try:
+                # Étape 1: Connexion (même processus que navigate-admin)
+                await page.goto(connection_data.site_url, timeout=30000, wait_until="networkidle")
+                await asyncio.sleep(1)
+                
+                await page.fill('input[name="j_username"]', connection_data.login, timeout=5000)
+                await asyncio.sleep(0.5)
+                await page.fill('input[name="j_password"]', connection_data.password, timeout=5000)
+                await asyncio.sleep(1)
+                
+                await page.wait_for_selector('button[type="submit"]:not([disabled])', timeout=10000)
+                await asyncio.sleep(0.5)
+                await page.click('button[type="submit"]', timeout=5000)
+                
+                await page.wait_for_load_state("networkidle", timeout=15000)
+                await asyncio.sleep(2)
+                
+                # Cliquer sur l'icône utilisateur
+                await page.click('.icon-user', timeout=5000)
+                await asyncio.sleep(1)
+                
+                # Cliquer sur Administration
+                await page.wait_for_selector('button[mat-menu-item]', timeout=5000)
+                await page.click('button.user-menu-item:has-text("Administration")', timeout=5000)
+                await page.wait_for_load_state("networkidle", timeout=15000)
+                await asyncio.sleep(2)
+                
+                # Étape 2: Cliquer sur "Import de données"
+                await page.click('a:has-text("Import de données")', timeout=10000)
+                await page.wait_for_load_state("networkidle", timeout=15000)
+                await asyncio.sleep(2)
+                
+                # Étape 3: Extraire tous les formats avec pagination
+                all_formats = []
+                page_number = 1
+                
+                while True:
+                    # Attendre que le tableau soit chargé
+                    await page.wait_for_selector('app-link a.a', timeout=10000)
+                    await asyncio.sleep(1)
+                    
+                    # Extraire les éléments de la page actuelle
+                    formats = await page.evaluate('''() => {
+                        const links = document.querySelectorAll('app-link a.a');
+                        return Array.from(links).map(link => ({
+                            name: link.textContent.trim(),
+                            href: link.getAttribute('href')
+                        }));
+                    }''')
+                    
+                    all_formats.extend(formats)
+                    logger.info(f"Page {page_number}: {len(formats)} formats extraits")
+                    
+                    # Vérifier s'il y a une page suivante
+                    try:
+                        next_button = await page.query_selector('button.k-pager-nav:has-text("Page suivante"):not([disabled])')
+                        if next_button:
+                            await next_button.click()
+                            await asyncio.sleep(2)
+                            await page.wait_for_load_state("networkidle", timeout=10000)
+                            page_number += 1
+                        else:
+                            break
+                    except:
+                        break
+                
+                await browser.close()
+                
+                return ImportFormatsList(
+                    success=True,
+                    message=f"{len(all_formats)} formats d'import extraits avec succès",
+                    formats=all_formats,
+                    total_count=len(all_formats)
+                )
+                
+            except Exception as e:
+                await browser.close()
+                raise e
+                
+    except Exception as e:
+        logger.error(f"Extract formats error: {str(e)}")
+        return ImportFormatsList(
+            success=False,
+            message=f"Erreur: {str(e)}",
+            formats=[],
+            total_count=0
+        )
+
 # Include the router in the main app
 app.include_router(api_router)
 
