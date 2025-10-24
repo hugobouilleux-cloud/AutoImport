@@ -769,6 +769,58 @@ async def extract_format_table(request: SelectFormatRequest):
             total_rows=0
         )
 
+@api_router.post("/import/execute")
+async def execute_import(
+    file: UploadFile = File(...),
+    file_format: str = Form(...),
+    site_url: str = Form(...),
+    login: str = Form(...),
+    password: str = Form(...),
+    selected_format: str = Form(...),
+    table_config: str = Form(...)
+):
+    """
+    Execute the import with the uploaded file
+    """
+    try:
+        # Parse JSON strings
+        selected_format_data = json.loads(selected_format)
+        table_config_data = json.loads(table_config)
+        
+        # Save uploaded file temporarily
+        upload_dir = Path("/tmp/uploads")
+        upload_dir.mkdir(exist_ok=True)
+        
+        file_path = upload_dir / file.filename
+        with open(file_path, "wb") as f:
+            content = await file.read()
+            f.write(content)
+        
+        logger.info(f"File uploaded: {file.filename} ({file_format})")
+        logger.info(f"Table config: {table_config_data['total_rows']} rows")
+        logger.info(f"Selected format: {selected_format_data['name']}")
+        
+        # TODO: Implement actual import logic here
+        # This would involve:
+        # 1. Reading the file based on format (Excel, Word, PDF)
+        # 2. Mapping data according to table_config
+        # 3. Using Playwright to navigate and import data to Legisway
+        
+        return {
+            "success": True,
+            "message": f"Fichier {file.filename} reçu et prêt pour l'import ({file_format})",
+            "file_name": file.filename,
+            "file_format": file_format,
+            "rows_configured": table_config_data['total_rows']
+        }
+        
+    except Exception as e:
+        logger.error(f"Import error: {str(e)}")
+        return {
+            "success": False,
+            "message": f"Erreur lors de l'import: {str(e)}"
+        }
+
 # Include the router in the main app
 app.include_router(api_router)
 
