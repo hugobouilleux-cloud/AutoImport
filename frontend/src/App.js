@@ -144,7 +144,16 @@ const Home = () => {
       if (response.data.success) {
         toast.success(response.data.message);
       } else {
-        toast.error(response.data.message);
+        // Show detailed error message
+        const errorMsg = response.data.message;
+        toast.error(errorMsg, {
+          duration: 10000, // 10 seconds for longer messages
+        });
+        
+        // If there are missing keys, log them
+        if (response.data.missing_keys) {
+          console.error("Missing keys:", response.data.missing_keys);
+        }
       }
     } catch (error) {
       console.error("Error importing:", error);
