@@ -66,6 +66,17 @@ class ImportFormatsList(BaseModel):
     formats: List[ImportFormat]
     total_count: int
 
+class SelectFormatRequest(BaseModel):
+    site_url: str
+    login: str
+    password: str
+    selected_format: ImportFormat
+
+class SelectFormatResult(BaseModel):
+    success: bool
+    message: str
+    format_url: Optional[str] = None
+
 # Add your routes to the router instead of directly to app
 @api_router.get("/")
 async def root():
