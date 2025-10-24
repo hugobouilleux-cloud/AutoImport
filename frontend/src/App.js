@@ -65,6 +65,36 @@ const Home = () => {
     toast.success(`Format sélectionné: ${format.name}`);
   };
 
+  const continueWithFormat = async () => {
+    if (!selectedFormat) {
+      toast.error("Veuillez sélectionner un format");
+      return;
+    }
+
+    setNavigating(true);
+
+    try {
+      const response = await axios.post(`${API}/connection/select-format`, {
+        site_url: formData.site_url,
+        login: formData.login,
+        password: formData.password,
+        selected_format: selectedFormat
+      });
+
+      if (response.data.success) {
+        toast.success("Format sélectionné dans le tableau !");
+        setAdminUrl(response.data.format_url);
+      } else {
+        toast.error(response.data.message);
+      }
+    } catch (error) {
+      console.error("Error selecting format:", error);
+      toast.error("Erreur lors de la sélection du format");
+    } finally {
+      setNavigating(false);
+    }
+  };
+
   return (
     <div className="min-h-screen" data-testid="home-page">
       <Toaster position="top-right" />
