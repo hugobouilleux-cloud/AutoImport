@@ -127,24 +127,6 @@ const Home = () => {
                 />
               </div>
 
-              {result && (
-                <Alert
-                  className={`${result.success ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}
-                  data-testid="connection-result"
-                >
-                  <div className="flex items-center gap-2">
-                    {result.success ? (
-                      <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                    ) : (
-                      <XCircle className="w-5 h-5 text-red-600" />
-                    )}
-                    <AlertDescription className={`${result.success ? 'text-emerald-700' : 'text-red-700'}`}>
-                      {result.message}
-                    </AlertDescription>
-                  </div>
-                </Alert>
-              )}
-
               {adminUrl && (
                 <Alert className="bg-blue-50 border-blue-200" data-testid="admin-url-result">
                   <div className="flex items-center gap-2">
@@ -156,47 +138,20 @@ const Home = () => {
                 </Alert>
               )}
 
-              <div className="flex gap-3 pt-2">
+              <div className="pt-4">
                 <Button
-                  onClick={testConnection}
-                  disabled={loading || navigating}
-                  className="flex-1 h-11 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-medium shadow-md hover:shadow-lg transition-all"
-                  data-testid="test-connection-button"
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Test en cours...
-                    </>
-                  ) : (
-                    "Tester la connexion"
-                  )}
-                </Button>
-                <Button
-                  onClick={saveConnection}
-                  variant="outline"
+                  onClick={startApp}
                   disabled={navigating}
-                  className="flex-1 h-11 border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-50 font-medium transition-colors"
-                  data-testid="save-connection-button"
-                >
-                  Sauvegarder
-                </Button>
-              </div>
-
-              <div className="pt-4 border-t">
-                <Button
-                  onClick={navigateToAdmin}
-                  disabled={navigating || loading}
-                  className="w-full h-11 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-medium shadow-md hover:shadow-lg transition-all"
-                  data-testid="navigate-admin-button"
+                  className="w-full h-12 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-600 hover:via-teal-600 hover:to-cyan-600 text-white font-bold text-lg shadow-lg hover:shadow-xl transition-all"
+                  data-testid="start-app-button"
                 >
                   {navigating ? (
                     <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Navigation en cours...
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      En cours...
                     </>
                   ) : (
-                    "Accéder à l'Administration"
+                    "Start the app!"
                   )}
                 </Button>
               </div>
