@@ -283,6 +283,56 @@ const Home = () => {
             </Card>
           )}
 
+          {/* Table Display */}
+          {showTable && tableData && (
+            <Card className="border-0 shadow-xl">
+              <CardHeader className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-t-lg">
+                <CardTitle className="text-2xl text-gray-900 flex items-center gap-2">
+                  <Table className="w-6 h-6 text-purple-600" />
+                  Configuration du format ({tableData.total_rows} lignes)
+                </CardTitle>
+                <CardDescription className="text-gray-600">
+                  Tableau de configuration extrait de {selectedFormat?.name}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className="bg-gray-100">
+                        {tableData.headers.map((header, index) => (
+                          <th
+                            key={index}
+                            className="border border-gray-300 px-3 py-2 text-left text-sm font-semibold text-gray-700"
+                          >
+                            {header}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {tableData.rows.map((row, rowIndex) => (
+                        <tr
+                          key={rowIndex}
+                          className={rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
+                        >
+                          {row.cells.map((cell, cellIndex) => (
+                            <td
+                              key={cellIndex}
+                              className="border border-gray-300 px-3 py-2 text-sm text-gray-800"
+                            >
+                              {cell || '-'}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Info Card */}
           <Card className="border-l-4 border-l-teal-400 bg-gradient-to-br from-slate-50 to-gray-50 shadow-md">
             <CardContent className="pt-6">
