@@ -10,6 +10,8 @@ from typing import List, Optional
 import uuid
 from datetime import datetime, timezone
 import httpx
+from playwright.async_api import async_playwright
+import asyncio
 
 
 ROOT_DIR = Path(__file__).parent
