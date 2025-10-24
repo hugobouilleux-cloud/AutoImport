@@ -336,52 +336,122 @@ const Home = () => {
             </Card>
           )}
 
-          {/* Table Display */}
-          {showTable && tableData && (
+          {/* Format Choice and File Upload */}
+          {showFormatChoice && tableData && (
             <Card className="border-0 shadow-xl">
-              <CardHeader className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-t-lg">
+              <CardHeader className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-t-lg">
                 <CardTitle className="text-2xl text-gray-900 flex items-center gap-2">
-                  <Table className="w-6 h-6 text-purple-600" />
-                  Configuration du format ({tableData.total_rows} lignes)
+                  <FileSpreadsheet className="w-6 h-6 text-purple-600" />
+                  Import des données
                 </CardTitle>
                 <CardDescription className="text-gray-600">
-                  Tableau de configuration extrait de {selectedFormat?.name}
+                  Configuration récupérée ({tableData.total_rows} lignes). Choisissez le format et uploadez votre fichier.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="pt-6">
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse">
-                    <thead>
-                      <tr className="bg-gray-100">
-                        {tableData.headers.map((header, index) => (
-                          <th
-                            key={index}
-                            className="border border-gray-300 px-3 py-2 text-left text-sm font-semibold text-gray-700"
-                          >
-                            {header}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {tableData.rows.map((row, rowIndex) => (
-                        <tr
-                          key={rowIndex}
-                          className={rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
-                        >
-                          {row.cells.map((cell, cellIndex) => (
-                            <td
-                              key={cellIndex}
-                              className="border border-gray-300 px-3 py-2 text-sm text-gray-800"
-                            >
-                              {cell || '-'}
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+              <CardContent className="pt-6 space-y-6">
+                {/* Format Selection */}
+                <div className="space-y-3">
+                  <Label className="text-gray-700 font-medium text-base">Choisissez le format du fichier</Label>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div
+                      onClick={() => setFileFormat('excel')}
+                      className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                        fileFormat === 'excel'
+                          ? 'border-emerald-500 bg-emerald-50'
+                          : 'border-gray-200 hover:border-emerald-300 hover:bg-gray-50'
+                      }`}
+                      data-testid="format-excel"
+                    >
+                      <div className="flex flex-col items-center gap-2">
+                        <FileSpreadsheet className={`w-8 h-8 ${fileFormat === 'excel' ? 'text-emerald-600' : 'text-gray-400'}`} />
+                        <span className="font-medium text-gray-900">Excel</span>
+                        <span className="text-xs text-gray-500">.xlsx, .xls</span>
+                      </div>
+                    </div>
+                    <div
+                      onClick={() => setFileFormat('word')}
+                      className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                        fileFormat === 'word'
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
+                      }`}
+                      data-testid="format-word"
+                    >
+                      <div className="flex flex-col items-center gap-2">
+                        <FileText className={`w-8 h-8 ${fileFormat === 'word' ? 'text-blue-600' : 'text-gray-400'}`} />
+                        <span className="font-medium text-gray-900">Word</span>
+                        <span className="text-xs text-gray-500">.docx, .doc</span>
+                      </div>
+                    </div>
+                    <div
+                      onClick={() => setFileFormat('pdf')}
+                      className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                        fileFormat === 'pdf'
+                          ? 'border-red-500 bg-red-50'
+                          : 'border-gray-200 hover:border-red-300 hover:bg-gray-50'
+                      }`}
+                      data-testid="format-pdf"
+                    >
+                      <div className="flex flex-col items-center gap-2">
+                        <FileText className={`w-8 h-8 ${fileFormat === 'pdf' ? 'text-red-600' : 'text-gray-400'}`} />
+                        <span className="font-medium text-gray-900">PDF</span>
+                        <span className="text-xs text-gray-500">.pdf</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
+
+                {/* File Upload */}
+                {fileFormat && (
+                  <div className="space-y-3">
+                    <Label className="text-gray-700 font-medium text-base">Uploadez votre fichier</Label>
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-emerald-400 transition-colors">
+                      <input
+                        type="file"
+                        id="file-upload"
+                        className="hidden"
+                        onChange={handleFileUpload}
+                        accept={
+                          fileFormat === 'excel' ? '.xlsx,.xls' :
+                          fileFormat === 'word' ? '.docx,.doc' :
+                          '.pdf'
+                        }
+                        data-testid="file-input"
+                      />
+                      <label
+                        htmlFor="file-upload"
+                        className="cursor-pointer flex flex-col items-center gap-2"
+                      >
+                        <Upload className="w-12 h-12 text-gray-400" />
+                        <span className="text-gray-700 font-medium">
+                          {uploadedFile ? uploadedFile.name : 'Cliquez pour sélectionner un fichier'}
+                        </span>
+                        <span className="text-sm text-gray-500">
+                          Format accepté: {fileFormat.toUpperCase()}
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+                )}
+
+                {/* Submit Button */}
+                {uploadedFile && fileFormat && (
+                  <Button
+                    onClick={submitImport}
+                    disabled={uploading}
+                    className="w-full h-12 bg-gradient-to-r from-purple-500 via-indigo-500 to-blue-500 hover:from-purple-600 hover:via-indigo-600 hover:to-blue-600 text-white font-bold text-lg shadow-lg hover:shadow-xl transition-all"
+                    data-testid="submit-import-button"
+                  >
+                    {uploading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        Import en cours...
+                      </>
+                    ) : (
+                      "Lancer l'import"
+                    )}
+                  </Button>
+                )}
               </CardContent>
             </Card>
           )}
