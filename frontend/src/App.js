@@ -125,6 +125,7 @@ const Home = () => {
     }
 
     setUploading(true);
+    setValidationError(null);
 
     try {
       const formDataUpload = new FormData();
@@ -144,11 +145,13 @@ const Home = () => {
 
       if (response.data.success) {
         toast.success(response.data.message);
+        setValidationError(null);
       } else {
         // Show detailed error message
         const errorMsg = response.data.message;
-        toast.error(errorMsg, {
-          duration: 10000, // 10 seconds for longer messages
+        setValidationError(errorMsg);
+        toast.error("Validation échouée - Voir les détails ci-dessous", {
+          duration: 5000,
         });
         
         // If there are missing keys, log them
