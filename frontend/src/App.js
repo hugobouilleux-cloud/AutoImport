@@ -26,7 +26,10 @@ const Home = () => {
   const [selectedFormat, setSelectedFormat] = useState(null);
   const [showFormats, setShowFormats] = useState(false);
   const [tableData, setTableData] = useState(null);
-  const [showTable, setShowTable] = useState(false);
+  const [showFormatChoice, setShowFormatChoice] = useState(false);
+  const [fileFormat, setFileFormat] = useState(null);
+  const [uploadedFile, setUploadedFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value} = e.target;
