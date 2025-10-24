@@ -831,6 +831,18 @@ async def execute_import(
         
         logger.info(f"Excel lu: {len(excel_data['headers'])} colonnes, {len(excel_data['rows'])} lignes")
         
+        # Validate key columns
+        validation_result = validate_key_columns(excel_data, table_config_data)
+        
+        if not validation_result['success']:
+            return {
+                "success": False,
+                "message": validation_result['message'],
+                "missing_keys": validation_result.get('missing_keys', [])
+            }
+        
+        logger.info("Validation des clés réussie")
+        
         # Import data to Legisway
         result = await import_to_legisway(
             site_url=site_url,
