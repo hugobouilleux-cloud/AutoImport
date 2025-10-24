@@ -74,9 +74,11 @@ const Home = () => {
     }
 
     setNavigating(true);
+    setTableData(null);
+    setShowTable(false);
 
     try {
-      const response = await axios.post(`${API}/connection/select-format`, {
+      const response = await axios.post(`${API}/connection/extract-table`, {
         site_url: formData.site_url,
         login: formData.login,
         password: formData.password,
@@ -84,14 +86,15 @@ const Home = () => {
       });
 
       if (response.data.success) {
-        toast.success("Format sélectionné dans le tableau !");
-        setAdminUrl(response.data.format_url);
+        toast.success(`Tableau extrait: ${response.data.total_rows} lignes !`);
+        setTableData(response.data);
+        setShowTable(true);
       } else {
         toast.error(response.data.message);
       }
     } catch (error) {
-      console.error("Error selecting format:", error);
-      toast.error("Erreur lors de la sélection du format");
+      console.error("Error extracting table:", error);
+      toast.error("Erreur lors de l'extraction du tableau");
     } finally {
       setNavigating(false);
     }
