@@ -65,7 +65,7 @@ async def test_connection(connection_data: ConnectionTest):
     Test the connection to the external site
     """
     try:
-        async with httpx.AsyncClient(follow_redirects=True, timeout=30.0) as client:
+        async with httpx.AsyncClient(follow_redirects=True, timeout=30.0, verify=False) as client:
             # Préparer les données de connexion
             login_data = {
                 "username": connection_data.login,
