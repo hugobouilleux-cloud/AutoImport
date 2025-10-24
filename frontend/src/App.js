@@ -169,6 +169,70 @@ const Home = () => {
             </CardContent>
           </Card>
 
+          {/* Formats List */}
+          {showFormats && formats.length > 0 && (
+            <Card className="border-0 shadow-xl">
+              <CardHeader className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-t-lg">
+                <CardTitle className="text-2xl text-gray-900 flex items-center gap-2">
+                  <FileText className="w-6 h-6 text-blue-600" />
+                  Formats d'import disponibles ({formats.length})
+                </CardTitle>
+                <CardDescription className="text-gray-600">
+                  Sélectionnez un format pour continuer
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <div className="mb-4">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <Input
+                      type="text"
+                      placeholder="Rechercher un format..."
+                      className="pl-10 h-11"
+                      data-testid="search-format-input"
+                    />
+                  </div>
+                </div>
+                <div className="max-h-96 overflow-y-auto space-y-2">
+                  {formats.map((format, index) => (
+                    <div
+                      key={index}
+                      onClick={() => handleSelectFormat(format)}
+                      className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                        selectedFormat?.name === format.name
+                          ? 'border-emerald-500 bg-emerald-50'
+                          : 'border-gray-200 hover:border-emerald-300 hover:bg-gray-50'
+                      }`}
+                      data-testid={`format-item-${index}`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-2 h-2 rounded-full ${
+                            selectedFormat?.name === format.name ? 'bg-emerald-500' : 'bg-gray-300'
+                          }`} />
+                          <span className="font-medium text-gray-900">{format.name}</span>
+                        </div>
+                        {selectedFormat?.name === format.name && (
+                          <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {selectedFormat && (
+                  <div className="mt-6 pt-4 border-t">
+                    <Alert className="bg-emerald-50 border-emerald-200">
+                      <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                      <AlertDescription className="text-emerald-700">
+                        Format sélectionné : <strong>{selectedFormat.name}</strong>
+                      </AlertDescription>
+                    </Alert>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
           {/* Info Card */}
           <Card className="border-l-4 border-l-teal-400 bg-gradient-to-br from-slate-50 to-gray-50 shadow-md">
             <CardContent className="pt-6">
@@ -181,8 +245,8 @@ const Home = () => {
                   <ul className="text-sm text-gray-600 space-y-1">
                     <li>1. Entrez l'URL de connexion du site cible</li>
                     <li>2. Saisissez vos identifiants de connexion</li>
-                    <li>3. Testez la connexion avant de sauvegarder</li>
-                    <li>4. Sauvegardez pour utiliser plus tard</li>
+                    <li>3. Cliquez sur "Start the app!" pour extraire les formats</li>
+                    <li>4. Sélectionnez le format souhaité dans la liste</li>
                   </ul>
                 </div>
               </div>
