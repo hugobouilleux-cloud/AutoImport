@@ -20,9 +20,6 @@ const Home = () => {
     login: "",
     password: ""
   });
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null);
-  const [savedConnections, setSavedConnections] = useState([]);
   const [navigating, setNavigating] = useState(false);
   const [adminUrl, setAdminUrl] = useState(null);
 
@@ -31,75 +28,7 @@ const Home = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const testConnection = async () => {
-    if (!formData.site_url || !formData.login || !formData.password) {
-      toast.error("Veuillez remplir tous les champs");
-      return;
-    }
-
-    setLoading(true);
-    setResult(null);
-
-    try {
-      const response = await axios.post(`${API}/connection/test`, formData);
-      setResult(response.data);
-      
-      if (response.data.success) {
-        toast.success("Connexion réussie !");
-      } else {
-        toast.error(response.data.message);
-      }
-    } catch (error) {
-      console.error("Error testing connection:", error);
-      setResult({
-        success: false,
-        message: "Erreur lors du test de connexion"
-      });
-      toast.error("Erreur lors du test de connexion");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const saveConnection = async () => {
-    if (!formData.site_url || !formData.login || !formData.password) {
-      toast.error("Veuillez remplir tous les champs");
-      return;
-    }
-
-    try {
-      await axios.post(`${API}/connection/save`, formData);
-      toast.success("Configuration sauvegardée avec succès");
-      setFormData({ site_url: "", login: "", password: "" });
-      setResult(null);
-      loadConnections();
-    } catch (error) {
-      console.error("Error saving connection:", error);
-      toast.error("Erreur lors de la sauvegarde");
-    }
-  };
-
-  const loadConnections = async () => {
-    try {
-      const response = await axios.get(`${API}/connection/list`);
-      setSavedConnections(response.data);
-    } catch (error) {
-      console.error("Error loading connections:", error);
-    }
-  };
-
-  const deleteConnection = async (id) => {
-    try {
-      await axios.delete(`${API}/connection/${id}`);
-      toast.success("Connexion supprimée");
-      loadConnections();
-    } catch (error) {
-      console.error("Error deleting connection:", error);
-      toast.error("Erreur lors de la suppression");
-    }
-  };
-
-  const navigateToAdmin = async () => {
+  const startApp = async () => {
     if (!formData.site_url || !formData.login || !formData.password) {
       toast.error("Veuillez remplir tous les champs");
       return;
