@@ -188,44 +188,13 @@ async def navigate_to_admin(connection_data: ConnectionTest):
                 await asyncio.sleep(1)
                 
                 # Étape 2: Remplir le formulaire de connexion
-                # Essayer différents sélecteurs pour le username
-                username_selectors = [
-                    'input[name="username"]',
-                    'input[type="text"]',
-                    'input[id*="user"]',
-                    'input[placeholder*="user" i]',
-                    'input[placeholder*="identifiant" i]'
-                ]
+                # Remplir le champ username (j_username)
+                await page.fill('input[name="j_username"]', connection_data.login, timeout=5000)
+                await asyncio.sleep(0.5)
                 
-                username_filled = False
-                for selector in username_selectors:
-                    try:
-                        await page.fill(selector, connection_data.login, timeout=2000)
-                        username_filled = True
-                        break
-                    except:
-                        continue
-                
-                if not username_filled:
-                    raise Exception("Impossible de trouver le champ username")
-                
-                # Essayer différents sélecteurs pour le password
-                password_selectors = [
-                    'input[name="password"]',
-                    'input[type="password"]'
-                ]
-                
-                password_filled = False
-                for selector in password_selectors:
-                    try:
-                        await page.fill(selector, connection_data.password, timeout=2000)
-                        password_filled = True
-                        break
-                    except:
-                        continue
-                
-                if not password_filled:
-                    raise Exception("Impossible de trouver le champ password")
+                # Remplir le champ password (j_password)
+                await page.fill('input[name="j_password"]', connection_data.password, timeout=5000)
+                await asyncio.sleep(0.5)
                 
                 # Étape 3: Soumettre le formulaire
                 submit_selectors = [
