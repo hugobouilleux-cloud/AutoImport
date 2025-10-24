@@ -22,6 +22,9 @@ const Home = () => {
   });
   const [navigating, setNavigating] = useState(false);
   const [adminUrl, setAdminUrl] = useState(null);
+  const [formats, setFormats] = useState([]);
+  const [selectedFormat, setSelectedFormat] = useState(null);
+  const [showFormats, setShowFormats] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -36,22 +39,30 @@ const Home = () => {
 
     setNavigating(true);
     setAdminUrl(null);
+    setFormats([]);
+    setShowFormats(false);
 
     try {
-      const response = await axios.post(`${API}/connection/navigate-admin`, formData);
+      const response = await axios.post(`${API}/connection/extract-formats`, formData);
       
       if (response.data.success) {
-        toast.success("Navigation vers l'administration réussie !");
-        setAdminUrl(response.data.admin_url);
+        toast.success(`${response.data.total_count} formats d'import récupérés !`);
+        setFormats(response.data.formats);
+        setShowFormats(true);
       } else {
         toast.error(response.data.message);
       }
     } catch (error) {
-      console.error("Error navigating to admin:", error);
-      toast.error("Erreur lors de la navigation");
+      console.error("Error extracting formats:", error);
+      toast.error("Erreur lors de l'extraction des formats");
     } finally {
       setNavigating(false);
     }
+  };
+
+  const handleSelectFormat = (format) => {
+    setSelectedFormat(format);
+    toast.success(`Format sélectionné: ${format.name}`);
   };
 
   return (
