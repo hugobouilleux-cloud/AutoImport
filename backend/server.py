@@ -6,13 +6,14 @@ import os
 import logging
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict
-from typing import List, Optional
+from typing import List, Optional, Dict
 import uuid
 from datetime import datetime, timezone
 import httpx
 from playwright.async_api import async_playwright
 import asyncio
 import json
+from openpyxl import load_workbook
 
 
 ROOT_DIR = Path(__file__).parent
