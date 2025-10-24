@@ -56,6 +56,16 @@ class ConnectionResult(BaseModel):
     message: str
     status_code: Optional[int] = None
 
+class ImportFormat(BaseModel):
+    name: str
+    href: str
+
+class ImportFormatsList(BaseModel):
+    success: bool
+    message: str
+    formats: List[ImportFormat]
+    total_count: int
+
 # Add your routes to the router instead of directly to app
 @api_router.get("/")
 async def root():
