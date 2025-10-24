@@ -112,8 +112,8 @@ const Home = () => {
               <Link2 className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">AutoConnect</h1>
-              <p className="text-sm text-gray-500">Automatisez vos connexions</p>
+              <h1 className="text-2xl font-bold text-gray-900">AutoImport by VPWhite</h1>
+              <p className="text-sm text-gray-500">Automatisez vos imports Legisway</p>
             </div>
           </div>
         </div>
