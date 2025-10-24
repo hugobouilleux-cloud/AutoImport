@@ -440,6 +440,19 @@ const Home = () => {
                     )}
                   </Button>
                 )}
+
+                {/* Validation Error Display */}
+                {validationError && (
+                  <Alert className="bg-red-50 border-red-300">
+                    <XCircle className="w-5 h-5 text-red-600" />
+                    <AlertDescription className="text-red-800">
+                      <strong className="block mb-2">Erreurs de validation :</strong>
+                      <pre className="text-xs whitespace-pre-wrap font-mono bg-red-100 p-3 rounded">
+                        {validationError}
+                      </pre>
+                    </AlertDescription>
+                  </Alert>
+                )}
               </CardContent>
             </Card>
           )}
