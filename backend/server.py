@@ -442,6 +442,143 @@ async def extract_import_formats(connection_data: ConnectionTest):
             total_count=0
         )
 
+@api_router.post("/connection/select-format", response_model=SelectFormatResult)
+async def select_format_in_table(request: SelectFormatRequest):
+    """
+    Navigate to the format page and click on the selected format in the table
+    """
+    try:
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(headless=True, args=['--no-sandbox', '--disable-setuid-sandbox'])
+            context = await browser.new_context(
+                ignore_https_errors=True,
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+            )
+            page = await context.new_page()
+            
+            try:
+                # Étape 1: Connexion
+                await page.goto(request.site_url, timeout=30000, wait_until="networkidle")
+                await asyncio.sleep(1)
+                
+                await page.fill('input[name="j_username"]', request.login, timeout=5000)
+                await asyncio.sleep(0.5)
+                await page.fill('input[name="j_password"]', request.password, timeout=5000)
+                await asyncio.sleep(1)
+                
+                await page.wait_for_selector('button[type="submit"]:not([disabled])', timeout=10000)
+                await asyncio.sleep(0.5)
+                await page.click('button[type="submit"]', timeout=5000)
+                
+                await page.wait_for_load_state("networkidle", timeout=15000)
+                await asyncio.sleep(2)
+                
+                # Cliquer sur l'icône utilisateur
+                await page.click('.icon-user', timeout=5000)
+                await asyncio.sleep(1)
+                
+                # Cliquer sur Administration
+                await page.wait_for_selector('button[mat-menu-item]', timeout=5000)
+                await page.click('button.user-menu-item:has-text("Administration")', timeout=5000)
+                await page.wait_for_load_state("networkidle", timeout=15000)
+                await asyncio.sleep(2)
+                
+                # Étape 2: Cliquer sur "Import de données"
+                await page.click('a:has-text("Import de données")', timeout=10000)
+                await page.wait_for_load_state("networkidle", timeout=15000)
+                await asyncio.sleep(2)
+                
+                # Étape 3: Chercher et cliquer sur le format sélectionné dans le tableau
+                format_name = request.selected_format.name
+                format_href = request.selected_format.href
+                
+                logger.info(f"Recherche du format: {format_name}")
+                
+                # Parcourir les pages pour trouver le format
+                format_found = False
+                page_number = 1
+                
+                while not format_found:
+                    await page.wait_for_selector('app-link a.a', timeout=10000)
+                    await asyncio.sleep(1.5)
+                    
+                    # Chercher le format sur la page actuelle
+                    format_clicked = await page.evaluate('''(formatName) => {
+                        const links = document.querySelectorAll('app-link a.a');
+                        for (let link of links) {
+                            if (link.textContent.trim() === formatName) {
+                                link.click();
+                                return true;
+                            }
+                        }
+                        return false;
+                    }''', format_name)
+                    
+                    if format_clicked:
+                        format_found = True
+                        logger.info(f"Format trouvé et cliqué sur la page {page_number}")
+                        await asyncio.sleep(2)
+                        await page.wait_for_load_state("networkidle", timeout=15000)
+                        
+                        current_url = page.url
+                        await browser.close()
+                        
+                        return SelectFormatResult(
+                            success=True,
+                            message=f"Format '{format_name}' sélectionné avec succès",
+                            format_url=current_url
+                        )
+                    
+                    # Si pas trouvé, aller à la page suivante
+                    next_button_exists = await page.evaluate('''() => {
+                        const buttons = document.querySelectorAll('button.k-pager-nav');
+                        for (let btn of buttons) {
+                            const title = btn.getAttribute('title');
+                            const ariaLabel = btn.getAttribute('aria-label');
+                            if ((title === 'Page suivante' || ariaLabel === 'Page suivante') && 
+                                !btn.disabled && !btn.classList.contains('k-disabled')) {
+                                return true;
+                            }
+                        }
+                        return false;
+                    }''')
+                    
+                    if next_button_exists:
+                        await page.evaluate('''() => {
+                            const buttons = document.querySelectorAll('button.k-pager-nav');
+                            for (let btn of buttons) {
+                                const title = btn.getAttribute('title');
+                                const ariaLabel = btn.getAttribute('aria-label');
+                                if ((title === 'Page suivante' || ariaLabel === 'Page suivante') && 
+                                    !btn.disabled && !btn.classList.contains('k-disabled')) {
+                                    btn.click();
+                                    return;
+                                }
+                            }
+                        }''')
+                        await asyncio.sleep(2)
+                        await page.wait_for_load_state("networkidle", timeout=10000)
+                        page_number += 1
+                    else:
+                        await browser.close()
+                        return SelectFormatResult(
+                            success=False,
+                            message=f"Format '{format_name}' introuvable dans le tableau",
+                            format_url=None
+                        )
+                
+            except Exception as e:
+                await browser.close()
+                raise e
+                
+    except Exception as e:
+        logger.error(f"Select format error: {str(e)}")
+        return SelectFormatResult(
+            success=False,
+            message=f"Erreur: {str(e)}",
+            format_url=None
+        )
+
 # Include the router in the main app
 app.include_router(api_router)
 
