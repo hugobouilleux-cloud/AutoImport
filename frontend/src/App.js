@@ -78,7 +78,7 @@ const Home = () => {
 
     setNavigating(true);
     setTableData(null);
-    setShowTable(false);
+    setShowFormatChoice(false);
 
     try {
       const response = await axios.post(`${API}/connection/extract-table`, {
@@ -89,9 +89,9 @@ const Home = () => {
       });
 
       if (response.data.success) {
-        toast.success(`Tableau extrait: ${response.data.total_rows} lignes !`);
+        toast.success(`Configuration récupérée: ${response.data.total_rows} lignes !`);
         setTableData(response.data);
-        setShowTable(true);
+        setShowFormatChoice(true);
       } else {
         toast.error(response.data.message);
       }
@@ -100,6 +100,56 @@ const Home = () => {
       toast.error("Erreur lors de l'extraction du tableau");
     } finally {
       setNavigating(false);
+    }
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setUploadedFile(file);
+      toast.success(`Fichier sélectionné: ${file.name}`);
+    }
+  };
+
+  const submitImport = async () => {
+    if (!uploadedFile) {
+      toast.error("Veuillez sélectionner un fichier");
+      return;
+    }
+
+    if (!fileFormat) {
+      toast.error("Veuillez choisir un format");
+      return;
+    }
+
+    setUploading(true);
+
+    try {
+      const formDataUpload = new FormData();
+      formDataUpload.append('file', uploadedFile);
+      formDataUpload.append('file_format', fileFormat);
+      formDataUpload.append('site_url', formData.site_url);
+      formDataUpload.append('login', formData.login);
+      formDataUpload.append('password', formData.password);
+      formDataUpload.append('selected_format', JSON.stringify(selectedFormat));
+      formDataUpload.append('table_config', JSON.stringify(tableData));
+
+      const response = await axios.post(`${API}/import/execute`, formDataUpload, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      if (response.data.success) {
+        toast.success(response.data.message);
+      } else {
+        toast.error(response.data.message);
+      }
+    } catch (error) {
+      console.error("Error importing:", error);
+      toast.error("Erreur lors de l'import");
+    } finally {
+      setUploading(false);
     }
   };
 
