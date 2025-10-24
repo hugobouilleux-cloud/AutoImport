@@ -354,7 +354,7 @@ async def extract_import_formats(connection_data: ConnectionTest):
                 while True:
                     # Attendre que le tableau soit chargé
                     await page.wait_for_selector('app-link a.a', timeout=10000)
-                    await asyncio.sleep(1)
+                    await asyncio.sleep(1.5)
                     
                     # Extraire les éléments de la page actuelle
                     formats = await page.evaluate('''() => {
@@ -366,19 +366,47 @@ async def extract_import_formats(connection_data: ConnectionTest):
                     }''')
                     
                     all_formats.extend(formats)
-                    logger.info(f"Page {page_number}: {len(formats)} formats extraits")
+                    logger.info(f"Page {page_number}: {len(formats)} formats extraits, total: {len(all_formats)}")
                     
-                    # Vérifier s'il y a une page suivante
+                    # Vérifier s'il y a une page suivante (bouton non désactivé)
                     try:
-                        next_button = await page.query_selector('button.k-pager-nav:has-text("Page suivante"):not([disabled])')
-                        if next_button:
-                            await next_button.click()
+                        # Chercher le bouton "Page suivante" qui n'est pas disabled
+                        next_button_exists = await page.evaluate('''() => {
+                            const buttons = document.querySelectorAll('button.k-pager-nav');
+                            for (let btn of buttons) {
+                                const title = btn.getAttribute('title');
+                                const ariaLabel = btn.getAttribute('aria-label');
+                                if ((title === 'Page suivante' || ariaLabel === 'Page suivante') && 
+                                    !btn.disabled && !btn.classList.contains('k-disabled')) {
+                                    return true;
+                                }
+                            }
+                            return false;
+                        }''')
+                        
+                        if next_button_exists:
+                            # Cliquer sur le bouton suivant
+                            await page.evaluate('''() => {
+                                const buttons = document.querySelectorAll('button.k-pager-nav');
+                                for (let btn of buttons) {
+                                    const title = btn.getAttribute('title');
+                                    const ariaLabel = btn.getAttribute('aria-label');
+                                    if ((title === 'Page suivante' || ariaLabel === 'Page suivante') && 
+                                        !btn.disabled && !btn.classList.contains('k-disabled')) {
+                                        btn.click();
+                                        return;
+                                    }
+                                }
+                            }''')
                             await asyncio.sleep(2)
                             await page.wait_for_load_state("networkidle", timeout=10000)
+                            await asyncio.sleep(1)
                             page_number += 1
                         else:
+                            logger.info(f"Fin de la pagination - Total: {len(all_formats)} formats")
                             break
-                    except:
+                    except Exception as e:
+                        logger.info(f"Erreur pagination ou fin atteinte: {str(e)}")
                         break
                 
                 await browser.close()
