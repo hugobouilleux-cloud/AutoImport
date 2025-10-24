@@ -902,6 +902,107 @@ def read_excel_file(file_path: str) -> Dict:
             "total_rows": 0
         }
 
+def validate_key_columns(excel_data: Dict, table_config: Dict) -> Dict:
+    """
+    Validate that key columns (Clé = Oui) are filled in all rows
+    """
+    try:
+        # Extract key fields from table_config
+        # table_config has headers and rows
+        # Column index 0 = Chemin (path), Column index 1 = Clé (key indicator)
+        
+        key_fields = []
+        
+        # Find which fields are marked as keys
+        for row in table_config['rows']:
+            if len(row.cells) >= 2:
+                field_path = row.cells[0]  # Chemin (path)
+                is_key = row.cells[1]      # Clé (Oui/Non)
+                
+                if is_key == "Oui":
+                    key_fields.append(field_path)
+        
+        logger.info(f"Champs clés trouvés: {key_fields}")
+        
+        if not key_fields:
+            logger.warning("Aucun champ clé défini dans la configuration")
+            return {
+                "success": True,
+                "message": "Aucun champ clé à valider"
+            }
+        
+        # Map Excel headers to key fields
+        excel_headers = excel_data['headers']
+        key_column_indices = []
+        
+        for key_field in key_fields:
+            # Try to find matching column in Excel
+            found = False
+            for idx, header in enumerate(excel_headers):
+                if header.strip() == key_field.strip() or key_field.strip() in header.strip():
+                    key_column_indices.append((idx, key_field))
+                    found = True
+                    break
+            
+            if not found:
+                logger.warning(f"Colonne clé '{key_field}' non trouvée dans Excel")
+        
+        if not key_column_indices:
+            return {
+                "success": False,
+                "message": "Aucune colonne clé trouvée dans le fichier Excel"
+            }
+        
+        logger.info(f"Colonnes clés à valider: {[f[1] for f in key_column_indices]}")
+        
+        # Validate that key columns are filled in all rows
+        missing_keys = []
+        
+        for row_idx, row in enumerate(excel_data['rows'], start=2):  # Start at 2 (after header)
+            for col_idx, key_field in key_column_indices:
+                if col_idx < len(row):
+                    value = row[col_idx].strip()
+                    if not value or value == "":
+                        missing_keys.append({
+                            "row": row_idx,
+                            "column": key_field,
+                            "column_index": col_idx + 1
+                        })
+        
+        if missing_keys:
+            # Group by column
+            missing_by_column = {}
+            for missing in missing_keys:
+                col = missing['column']
+                if col not in missing_by_column:
+                    missing_by_column[col] = []
+                missing_by_column[col].append(missing['row'])
+            
+            error_msg = "Colonnes clés manquantes:\n"
+            for col, rows in missing_by_column.items():
+                rows_str = ", ".join([str(r) for r in rows[:5]])
+                if len(rows) > 5:
+                    rows_str += f" ... (+{len(rows) - 5} autres)"
+                error_msg += f"- '{col}': lignes {rows_str}\n"
+            
+            return {
+                "success": False,
+                "message": error_msg,
+                "missing_keys": missing_keys
+            }
+        
+        return {
+            "success": True,
+            "message": f"Toutes les colonnes clés sont remplies ({len(key_column_indices)} colonnes validées)"
+        }
+        
+    except Exception as e:
+        logger.error(f"Validation error: {str(e)}")
+        return {
+            "success": False,
+            "message": f"Erreur validation: {str(e)}"
+        }
+
 async def import_to_legisway(
     site_url: str,
     login: str,
