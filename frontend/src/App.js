@@ -250,13 +250,28 @@ const Home = () => {
                   ))}
                 </div>
                 {selectedFormat && (
-                  <div className="mt-6 pt-4 border-t">
+                  <div className="mt-6 pt-4 border-t space-y-4">
                     <Alert className="bg-emerald-50 border-emerald-200">
                       <CheckCircle2 className="w-5 h-5 text-emerald-600" />
                       <AlertDescription className="text-emerald-700">
                         Format sélectionné : <strong>{selectedFormat.name}</strong>
                       </AlertDescription>
                     </Alert>
+                    <Button
+                      onClick={continueWithFormat}
+                      disabled={navigating}
+                      className="w-full h-12 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 hover:from-blue-600 hover:via-indigo-600 hover:to-purple-600 text-white font-bold text-lg shadow-lg hover:shadow-xl transition-all"
+                      data-testid="continue-format-button"
+                    >
+                      {navigating ? (
+                        <>
+                          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                          Sélection en cours...
+                        </>
+                      ) : (
+                        "Continuer avec ce format"
+                      )}
+                    </Button>
                   </div>
                 )}
               </CardContent>
