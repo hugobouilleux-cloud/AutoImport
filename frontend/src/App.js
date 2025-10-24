@@ -91,6 +91,7 @@ const Home = () => {
       if (response.data.success) {
         toast.success(`Configuration récupérée: ${response.data.total_rows} lignes !`);
         setTableData(response.data);
+        setFileFormat('excel'); // Auto-select Excel
         setShowFormatChoice(true);
       } else {
         toast.error(response.data.message);
