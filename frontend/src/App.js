@@ -216,6 +216,17 @@ const Home = () => {
                 </Alert>
               )}
 
+              {adminUrl && (
+                <Alert className="bg-blue-50 border-blue-200" data-testid="admin-url-result">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-5 h-5 text-blue-600" />
+                    <AlertDescription className="text-blue-700">
+                      Page d'administration atteinte ! URL: {adminUrl}
+                    </AlertDescription>
+                  </div>
+                </Alert>
+              )}
+
               <div className="flex gap-3 pt-2">
                 <Button
                   onClick={testConnection}
