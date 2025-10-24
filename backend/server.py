@@ -194,10 +194,13 @@ async def navigate_to_admin(connection_data: ConnectionTest):
                 
                 # Remplir le champ password (j_password)
                 await page.fill('input[name="j_password"]', connection_data.password, timeout=5000)
-                await asyncio.sleep(0.5)
+                await asyncio.sleep(1)
                 
-                # Étape 3: Soumettre le formulaire
-                await page.click('button[type="submit"]:has-text("Connexion")', timeout=5000)
+                # Étape 3: Attendre que le bouton soit activé et cliquer
+                # Le bouton est désactivé tant que le formulaire n'est pas valide
+                await page.wait_for_selector('button[type="submit"]:not([disabled])', timeout=10000)
+                await asyncio.sleep(0.5)
+                await page.click('button[type="submit"]', timeout=5000)
                 
                 # Attendre la navigation
                 await page.wait_for_load_state("networkidle", timeout=15000)
