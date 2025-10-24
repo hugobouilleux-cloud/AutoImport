@@ -708,8 +708,15 @@ async def extract_format_table(request: SelectFormatRequest):
                         )
                 
                 # Extraire le tableau
-                await page.wait_for_selector('table.k-grid-table', timeout=10000)
-                await asyncio.sleep(2)
+                logger.info("Attente du tableau...")
+                try:
+                    await page.wait_for_selector('table.k-grid-table', timeout=20000)
+                except Exception as e:
+                    logger.error(f"Tableau non trouvé: {str(e)}")
+                    # Essayer avec un autre sélecteur
+                    await page.wait_for_selector('kendo-grid', timeout=20000)
+                
+                await asyncio.sleep(3)
                 
                 table_data = await page.evaluate('''() => {
                     // Extraire les en-têtes
