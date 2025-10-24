@@ -77,6 +77,16 @@ class SelectFormatResult(BaseModel):
     message: str
     format_url: Optional[str] = None
 
+class TableRow(BaseModel):
+    cells: List[str]
+
+class TableExtractionResult(BaseModel):
+    success: bool
+    message: str
+    headers: List[str]
+    rows: List[TableRow]
+    total_rows: int
+
 # Add your routes to the router instead of directly to app
 @api_router.get("/")
 async def root():
