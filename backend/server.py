@@ -167,6 +167,171 @@ async def delete_connection(connection_id: str):
         raise HTTPException(status_code=404, detail="Connection not found")
     return {"message": "Connection deleted successfully"}
 
+@api_router.post("/connection/navigate-admin")
+async def navigate_to_admin(connection_data: ConnectionTest):
+    """
+    Navigate to administration page using Playwright
+    """
+    try:
+        async with async_playwright() as p:
+            # Lancer le navigateur en mode headless
+            browser = await p.chromium.launch(headless=True, args=['--no-sandbox', '--disable-setuid-sandbox'])
+            context = await browser.new_context(
+                ignore_https_errors=True,
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+            )
+            page = await context.new_page()
+            
+            try:
+                # Étape 1: Aller sur la page de login
+                await page.goto(connection_data.site_url, timeout=30000, wait_until="networkidle")
+                await asyncio.sleep(1)
+                
+                # Étape 2: Remplir le formulaire de connexion
+                # Essayer différents sélecteurs pour le username
+                username_selectors = [
+                    'input[name="username"]',
+                    'input[type="text"]',
+                    'input[id*="user"]',
+                    'input[placeholder*="user" i]',
+                    'input[placeholder*="identifiant" i]'
+                ]
+                
+                username_filled = False
+                for selector in username_selectors:
+                    try:
+                        await page.fill(selector, connection_data.login, timeout=2000)
+                        username_filled = True
+                        break
+                    except:
+                        continue
+                
+                if not username_filled:
+                    raise Exception("Impossible de trouver le champ username")
+                
+                # Essayer différents sélecteurs pour le password
+                password_selectors = [
+                    'input[name="password"]',
+                    'input[type="password"]'
+                ]
+                
+                password_filled = False
+                for selector in password_selectors:
+                    try:
+                        await page.fill(selector, connection_data.password, timeout=2000)
+                        password_filled = True
+                        break
+                    except:
+                        continue
+                
+                if not password_filled:
+                    raise Exception("Impossible de trouver le champ password")
+                
+                # Étape 3: Soumettre le formulaire
+                submit_selectors = [
+                    'button[type="submit"]',
+                    'input[type="submit"]',
+                    'button:has-text("Connexion")',
+                    'button:has-text("Login")',
+                    'button:has-text("Se connecter")'
+                ]
+                
+                for selector in submit_selectors:
+                    try:
+                        await page.click(selector, timeout=2000)
+                        break
+                    except:
+                        continue
+                
+                # Attendre la navigation
+                await page.wait_for_load_state("networkidle", timeout=15000)
+                await asyncio.sleep(2)
+                
+                # Étape 4: Cliquer sur l'icône utilisateur
+                try:
+                    # Chercher l'élément avec la classe icon-user
+                    await page.click('.icon-user', timeout=5000)
+                    await asyncio.sleep(1)
+                except Exception as e:
+                    # Essayer d'autres sélecteurs
+                    user_selectors = [
+                        'span.icon-user-without-picture',
+                        'span.icon-user',
+                        '[class*="icon-user"]',
+                        'button:has(.icon-user)'
+                    ]
+                    clicked = False
+                    for selector in user_selectors:
+                        try:
+                            await page.click(selector, timeout=2000)
+                            clicked = True
+                            await asyncio.sleep(1)
+                            break
+                        except:
+                            continue
+                    
+                    if not clicked:
+                        raise Exception(f"Impossible de cliquer sur l'icône utilisateur: {str(e)}")
+                
+                # Étape 5: Cliquer sur "Administration" dans le menu
+                try:
+                    # Attendre que le menu apparaisse
+                    await page.wait_for_selector('button[mat-menu-item]', timeout=5000)
+                    
+                    # Cliquer sur Administration
+                    admin_selectors = [
+                        'button.user-menu-item:has-text("Administration")',
+                        'button[mat-menu-item]:has-text("Administration")',
+                        'span.user-menu-item-label:has-text("Administration")',
+                        '[class*="menu-item"]:has-text("Administration")'
+                    ]
+                    
+                    clicked_admin = False
+                    for selector in admin_selectors:
+                        try:
+                            await page.click(selector, timeout=2000)
+                            clicked_admin = True
+                            break
+                        except:
+                            continue
+                    
+                    if not clicked_admin:
+                        raise Exception("Impossible de cliquer sur Administration")
+                    
+                    # Attendre le chargement de la page d'administration
+                    await page.wait_for_load_state("networkidle", timeout=15000)
+                    await asyncio.sleep(2)
+                    
+                    # Récupérer l'URL actuelle
+                    current_url = page.url
+                    
+                    # Prendre un screenshot pour vérification
+                    screenshot = await page.screenshot(full_page=False)
+                    
+                    await browser.close()
+                    
+                    return {
+                        "success": True,
+                        "message": "Navigation vers l'administration réussie",
+                        "admin_url": current_url
+                    }
+                    
+                except Exception as e:
+                    await browser.close()
+                    raise Exception(f"Erreur lors de la navigation vers l'administration: {str(e)}")
+                
+            except Exception as e:
+                await browser.close()
+                raise e
+                
+    except Exception as e:
+        logger.error(f"Navigation error: {str(e)}")
+        return {
+            "success": False,
+            "message": f"Erreur: {str(e)}",
+            "admin_url": None
+        }
+
 # Include the router in the main app
 app.include_router(api_router)
 
