@@ -30,6 +30,7 @@ const Home = () => {
   const [fileFormat, setFileFormat] = useState(null);
   const [uploadedFile, setUploadedFile] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [validationError, setValidationError] = useState(null);
 
   const handleInputChange = (e) => {
     const { name, value} = e.target;
