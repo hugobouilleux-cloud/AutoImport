@@ -25,9 +25,11 @@ const Home = () => {
   const [formats, setFormats] = useState([]);
   const [selectedFormat, setSelectedFormat] = useState(null);
   const [showFormats, setShowFormats] = useState(false);
+  const [tableData, setTableData] = useState(null);
+  const [showTable, setShowTable] = useState(false);
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value} = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
