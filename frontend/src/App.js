@@ -230,7 +230,7 @@ const Home = () => {
               <div className="flex gap-3 pt-2">
                 <Button
                   onClick={testConnection}
-                  disabled={loading}
+                  disabled={loading || navigating}
                   className="flex-1 h-11 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-medium shadow-md hover:shadow-lg transition-all"
                   data-testid="test-connection-button"
                 >
@@ -246,10 +246,29 @@ const Home = () => {
                 <Button
                   onClick={saveConnection}
                   variant="outline"
+                  disabled={navigating}
                   className="flex-1 h-11 border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-50 font-medium transition-colors"
                   data-testid="save-connection-button"
                 >
                   Sauvegarder
+                </Button>
+              </div>
+
+              <div className="pt-4 border-t">
+                <Button
+                  onClick={navigateToAdmin}
+                  disabled={navigating || loading}
+                  className="w-full h-11 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white font-medium shadow-md hover:shadow-lg transition-all"
+                  data-testid="navigate-admin-button"
+                >
+                  {navigating ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Navigation en cours...
+                    </>
+                  ) : (
+                    "Accéder à l'Administration"
+                  )}
                 </Button>
               </div>
             </CardContent>
