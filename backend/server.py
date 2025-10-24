@@ -954,13 +954,7 @@ async def import_to_legisway(
             "message": f"Erreur import Legisway: {str(e)}"
         }
         
-        return {
-            "success": True,
-            "message": f"Fichier {file.filename} reçu et prêt pour l'import ({file_format})",
-            "file_name": file.filename,
-            "file_format": file_format,
-            "rows_configured": table_config_data['total_rows']
-        }
+        return result
         
     except Exception as e:
         logger.error(f"Import error: {str(e)}")
