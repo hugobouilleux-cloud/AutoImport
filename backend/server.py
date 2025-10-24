@@ -658,8 +658,13 @@ async def extract_format_table(request: SelectFormatRequest):
                     
                     if format_clicked:
                         format_found = True
+                        logger.info(f"Format cliqué, attente du chargement...")
+                        await asyncio.sleep(5)
+                        try:
+                            await page.wait_for_load_state("domcontentloaded", timeout=30000)
+                        except:
+                            logger.warning("Timeout domcontentloaded, on continue...")
                         await asyncio.sleep(3)
-                        await page.wait_for_load_state("networkidle", timeout=15000)
                         break
                     
                     # Page suivante
