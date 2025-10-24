@@ -23,6 +23,8 @@ const Home = () => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [savedConnections, setSavedConnections] = useState([]);
+  const [navigating, setNavigating] = useState(false);
+  const [adminUrl, setAdminUrl] = useState(null);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
