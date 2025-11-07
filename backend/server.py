@@ -646,10 +646,12 @@ async def extract_format_table(request: SelectFormatRequest):
                     await page.wait_for_selector('app-link a.a', timeout=10000)
                     await asyncio.sleep(1.5)
                     
+                    logger.info(f"Recherche du format sur la page {page_number}...")
                     format_clicked = await page.evaluate('''(formatName) => {
                         const links = document.querySelectorAll('app-link a.a');
                         for (let link of links) {
                             if (link.textContent.trim() === formatName) {
+                                console.log('Format trouvé et cliqué:', formatName);
                                 link.click();
                                 return true;
                             }
