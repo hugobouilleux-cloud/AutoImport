@@ -660,12 +660,19 @@ async def extract_format_table(request: SelectFormatRequest):
                     if format_clicked:
                         format_found = True
                         logger.info(f"Format cliqué, attente du chargement...")
-                        await asyncio.sleep(5)
-                        try:
-                            await page.wait_for_load_state("domcontentloaded", timeout=30000)
-                        except:
-                            logger.warning("Timeout domcontentloaded, on continue...")
+                        
+                        # Attendre que l'URL change ou qu'un élément spécifique apparaisse
                         await asyncio.sleep(3)
+                        
+                        # Au lieu d'attendre networkidle, attendre un élément spécifique
+                        try:
+                            # Attendre qu'un élément de la nouvelle page soit présent
+                            await page.wait_for_selector('kendo-grid, table.k-grid-table', timeout=30000)
+                            logger.info("Nouvelle page détectée")
+                        except Exception as e:
+                            logger.warning(f"Timeout attente élément: {str(e)}")
+                        
+                        await asyncio.sleep(2)
                         break
                     
                     # Page suivante
