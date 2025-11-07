@@ -843,6 +843,25 @@ async def execute_import(
         
         logger.info("Validation des clés réussie")
         
+        # Validate list values
+        logger.info("Validation des valeurs de listes...")
+        list_validation_result = await validate_list_values(
+            excel_data=excel_data,
+            table_config=table_config_data,
+            site_url=site_url,
+            login=login,
+            password=password
+        )
+        
+        if not list_validation_result['success']:
+            return {
+                "success": False,
+                "message": list_validation_result['message'],
+                "invalid_values": list_validation_result.get('invalid_values', [])
+            }
+        
+        logger.info("Validation des listes réussie")
+        
         # Import data to Legisway
         result = await import_to_legisway(
             site_url=site_url,
