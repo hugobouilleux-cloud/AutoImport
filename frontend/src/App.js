@@ -251,6 +251,22 @@ const Home = () => {
                 </Alert>
               )}
 
+              {/* Loading Progress */}
+              {navigating && (
+                <Alert className="bg-blue-50 border-blue-200">
+                  <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />
+                  <AlertDescription className="text-blue-700">
+                    <div className="space-y-2">
+                      <p className="font-medium">Connexion en cours...</p>
+                      <div className="w-full bg-blue-200 rounded-full h-2">
+                        <div className="bg-blue-600 h-2 rounded-full animate-pulse" style={{width: '70%'}}></div>
+                      </div>
+                      <p className="text-xs text-blue-600">Récupération de la liste des formats d'import</p>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              )}
+
               <div className="pt-4">
                 <Button
                   onClick={startApp}
