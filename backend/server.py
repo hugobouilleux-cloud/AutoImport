@@ -1185,56 +1185,127 @@ async def fetch_list_values_from_legisway(
     list_types: List[str]
 ) -> Dict:
     """
-    Fetch allowed values for reference lists from Legisway
+    Fetch allowed values for reference lists from Legisway using REST API
     """
     try:
-        async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True, args=['--no-sandbox', '--disable-setuid-sandbox'])
-            context = await browser.new_context(
-                ignore_https_errors=True,
-                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-            )
-            page = await context.new_page()
-            
-            try:
-                # Login
-                await page.goto(site_url, timeout=30000, wait_until="networkidle")
-                await asyncio.sleep(1)
-                
-                await page.fill('input[name="j_username"]', login, timeout=5000)
-                await asyncio.sleep(0.5)
-                await page.fill('input[name="j_password"]', password, timeout=5000)
-                await asyncio.sleep(1)
-                
-                await page.wait_for_selector('button[type="submit"]:not([disabled])', timeout=10000)
-                await asyncio.sleep(0.5)
-                await page.click('button[type="submit"]', timeout=5000)
-                
-                await page.wait_for_load_state("domcontentloaded", timeout=30000)
-                await asyncio.sleep(2)
-                
-                lists = {}
-                
-                # For each list type, fetch values
-                # TODO: Implement the actual API calls or UI scraping to get list values
-                # This would depend on how Legisway exposes this data
-                
-                # For now, return empty lists (to be implemented)
-                for list_type in list_types:
-                    logger.info(f"Récupération de la liste: {list_type}")
-                    # Placeholder - need to implement actual fetching logic
-                    lists[list_type] = []
-                
-                await browser.close()
-                
-                return {
-                    "success": True,
-                    "lists": lists
+        # Get base URL from site_url
+        from urllib.parse import urlparse
+        parsed = urlparse(site_url)
+        base_url = f"{parsed.scheme}://{parsed.netloc}"
+        
+        async with httpx.AsyncClient(verify=False, timeout=60.0) as client:
+            # Step 1: Authenticate and get JWT token
+            logger.info("Authentication à l'API Legisway...")
+            auth_url = f"{base_url}/resource/api/v1/auth/system"
+            auth_response = await client.post(
+                auth_url,
+                json={
+                    "password": password,
+                    "languageCode": "fr"
+                },
+                headers={
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
                 }
-                
-            except Exception as e:
-                await browser.close()
-                raise e
+            )
+            
+            if auth_response.status_code != 200:
+                logger.error(f"Authentication failed: {auth_response.status_code}")
+                return {
+                    "success": False,
+                    "message": f"Échec authentification API: {auth_response.status_code}",
+                    "lists": {}
+                }
+            
+            jwt_token = auth_response.text.strip('"')
+            logger.info("Token JWT obtenu")
+            
+            # Step 2: For each list type, fetch field definitions
+            lists = {}
+            
+            for list_type in set(list_types):  # Use set to avoid duplicates
+                try:
+                    logger.info(f"Récupération de la liste: {list_type}")
+                    
+                    # Get field definitions for the list type
+                    fields_url = f"{base_url}/api/v1/fields/{list_type}"
+                    fields_response = await client.get(
+                        fields_url,
+                        headers={
+                            "Accept": "application/json",
+                            "Authorization": f"Bearer {jwt_token}"
+                        }
+                    )
+                    
+                    if fields_response.status_code == 200:
+                        fields_data = fields_response.json()
+                        
+                        # Extract list values from the response
+                        # The response contains dividers with sections and fields
+                        # We need to extract the actual list values
+                        
+                        values = []
+                        
+                        # Parse the structure to find list values
+                        for divider in fields_data:
+                            if 'sections' in divider:
+                                for section in divider['sections']:
+                                    if 'fields' in section:
+                                        for field in section['fields']:
+                                            # If this field has filters or criteria, those are list values
+                                            if 'filters' in field and field['filters']:
+                                                for filter_item in field['filters']:
+                                                    if 'name' in filter_item:
+                                                        values.append(filter_item['name'])
+                            
+                            # Also check criteria at divider level
+                            if 'criteria' in divider and divider['criteria']:
+                                for criterion in divider['criteria']:
+                                    if 'name' in criterion:
+                                        values.append(criterion['name'])
+                        
+                        # If no values found from fields API, try search API
+                        if not values:
+                            logger.info(f"Essai avec l'API de recherche pour {list_type}")
+                            search_url = f"{base_url}/resource/api/v1/search/{list_type}"
+                            search_response = await client.post(
+                                search_url,
+                                json={
+                                    "offset": 0,
+                                    "limit": 1000,
+                                    "fields": ["title.fr", "name"]
+                                },
+                                headers={
+                                    "Accept": "application/json",
+                                    "Content-Type": "application/json",
+                                    "Authorization": f"Bearer {jwt_token}"
+                                }
+                            )
+                            
+                            if search_response.status_code == 200:
+                                search_data = search_response.json()
+                                if 'data' in search_data:
+                                    for item in search_data['data']:
+                                        # Try to get the title or name
+                                        if 'title' in item and 'fr' in item['title']:
+                                            values.append(item['title']['fr'])
+                                        elif 'name' in item:
+                                            values.append(item['name'])
+                        
+                        lists[list_type] = list(set(values))  # Remove duplicates
+                        logger.info(f"Liste {list_type}: {len(lists[list_type])} valeurs")
+                    else:
+                        logger.warning(f"Impossible de récupérer {list_type}: {fields_response.status_code}")
+                        lists[list_type] = []
+                        
+                except Exception as e:
+                    logger.error(f"Erreur pour {list_type}: {str(e)}")
+                    lists[list_type] = []
+            
+            return {
+                "success": True,
+                "lists": lists
+            }
                 
     except Exception as e:
         logger.error(f"Fetch list values error: {str(e)}")
