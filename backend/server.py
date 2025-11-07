@@ -1022,6 +1022,228 @@ def validate_key_columns(excel_data: Dict, table_config: Dict) -> Dict:
             "message": f"Erreur validation: {str(e)}"
         }
 
+async def validate_list_values(
+    excel_data: Dict,
+    table_config: Dict,
+    site_url: str,
+    login: str,
+    password: str
+) -> Dict:
+    """
+    Validate that list values in Excel match allowed values from Legisway
+    """
+    try:
+        # Extract fields with filters from table_config
+        # Column index 0 = Chemin (path), Column index 2 = Filtre (filter)
+        
+        list_fields = []
+        
+        for row in table_config['rows']:
+            if len(row.cells) >= 3:
+                field_path = row.cells[0]  # Chemin (path)
+                filter_value = row.cells[2]  # Filtre
+                
+                # Check if filter contains type.name='...'
+                if filter_value and "type.name=" in filter_value:
+                    # Extract the list type name
+                    import re
+                    match = re.search(r"type\.name\s*=\s*['\"]([^'\"]+)['\"]", filter_value)
+                    if match:
+                        list_type = match.group(1)
+                        list_fields.append({
+                            "field_path": field_path,
+                            "list_type": list_type,
+                            "filter": filter_value
+                        })
+        
+        logger.info(f"Champs avec listes trouvés: {len(list_fields)}")
+        
+        if not list_fields:
+            return {
+                "success": True,
+                "message": "Aucune liste à valider"
+            }
+        
+        # Fetch list values from Legisway
+        logger.info("Récupération des listes depuis Legisway...")
+        list_values_cache = await fetch_list_values_from_legisway(
+            site_url=site_url,
+            login=login,
+            password=password,
+            list_types=[field['list_type'] for field in list_fields]
+        )
+        
+        if not list_values_cache['success']:
+            return {
+                "success": False,
+                "message": f"Erreur récupération des listes: {list_values_cache['message']}"
+            }
+        
+        logger.info(f"Listes récupérées: {len(list_values_cache['lists'])}")
+        
+        # Map Excel headers to list fields
+        excel_headers = excel_data['headers']
+        list_column_indices = []
+        
+        for list_field in list_fields:
+            field_path = list_field['field_path']
+            list_type = list_field['list_type']
+            
+            # Find matching column in Excel
+            for idx, header in enumerate(excel_headers):
+                if header.strip() == field_path.strip() or field_path.strip() in header.strip():
+                    list_column_indices.append({
+                        "col_idx": idx,
+                        "field_path": field_path,
+                        "list_type": list_type,
+                        "allowed_values": list_values_cache['lists'].get(list_type, [])
+                    })
+                    break
+        
+        if not list_column_indices:
+            return {
+                "success": True,
+                "message": "Aucune colonne de liste trouvée dans Excel"
+            }
+        
+        logger.info(f"Colonnes de listes à valider: {len(list_column_indices)}")
+        
+        # Validate values
+        invalid_values = []
+        
+        for row_idx, row in enumerate(excel_data['rows'], start=2):  # Start at 2 (after header)
+            for list_col in list_column_indices:
+                col_idx = list_col['col_idx']
+                
+                if col_idx < len(row):
+                    value = row[col_idx].strip()
+                    
+                    # Empty values are allowed
+                    if value and value != "":
+                        allowed_values = list_col['allowed_values']
+                        
+                        # Check if value is in allowed list
+                        if value not in allowed_values:
+                            invalid_values.append({
+                                "row": row_idx,
+                                "column": list_col['field_path'],
+                                "value": value,
+                                "list_type": list_col['list_type'],
+                                "allowed_values": allowed_values[:10]  # Show first 10 for error message
+                            })
+        
+        if invalid_values:
+            # Group by column
+            invalid_by_column = {}
+            for invalid in invalid_values:
+                col = invalid['column']
+                if col not in invalid_by_column:
+                    invalid_by_column[col] = []
+                invalid_by_column[col].append({
+                    "row": invalid['row'],
+                    "value": invalid['value']
+                })
+            
+            error_msg = "Valeurs invalides dans les listes:\n"
+            for col, errors in invalid_by_column.items():
+                error_msg += f"\n- Colonne '{col}':\n"
+                for err in errors[:5]:  # Show first 5
+                    error_msg += f"  Ligne {err['row']}: '{err['value']}' (invalide)\n"
+                if len(errors) > 5:
+                    error_msg += f"  ... (+{len(errors) - 5} autres valeurs invalides)\n"
+            
+            # Show allowed values for first error
+            if invalid_values:
+                first_invalid = invalid_values[0]
+                error_msg += f"\nValeurs autorisées pour '{first_invalid['list_type']}': "
+                error_msg += ", ".join([f"'{v}'" for v in first_invalid['allowed_values'][:10]])
+                if len(first_invalid['allowed_values']) > 10:
+                    error_msg += f" ... (+{len(first_invalid['allowed_values']) - 10} autres)"
+            
+            return {
+                "success": False,
+                "message": error_msg,
+                "invalid_values": invalid_values
+            }
+        
+        return {
+            "success": True,
+            "message": f"Toutes les valeurs de listes sont valides ({len(list_column_indices)} colonnes validées)"
+        }
+        
+    except Exception as e:
+        logger.error(f"List validation error: {str(e)}")
+        return {
+            "success": False,
+            "message": f"Erreur validation listes: {str(e)}"
+        }
+
+async def fetch_list_values_from_legisway(
+    site_url: str,
+    login: str,
+    password: str,
+    list_types: List[str]
+) -> Dict:
+    """
+    Fetch allowed values for reference lists from Legisway
+    """
+    try:
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(headless=True, args=['--no-sandbox', '--disable-setuid-sandbox'])
+            context = await browser.new_context(
+                ignore_https_errors=True,
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+            )
+            page = await context.new_page()
+            
+            try:
+                # Login
+                await page.goto(site_url, timeout=30000, wait_until="networkidle")
+                await asyncio.sleep(1)
+                
+                await page.fill('input[name="j_username"]', login, timeout=5000)
+                await asyncio.sleep(0.5)
+                await page.fill('input[name="j_password"]', password, timeout=5000)
+                await asyncio.sleep(1)
+                
+                await page.wait_for_selector('button[type="submit"]:not([disabled])', timeout=10000)
+                await asyncio.sleep(0.5)
+                await page.click('button[type="submit"]', timeout=5000)
+                
+                await page.wait_for_load_state("domcontentloaded", timeout=30000)
+                await asyncio.sleep(2)
+                
+                lists = {}
+                
+                # For each list type, fetch values
+                # TODO: Implement the actual API calls or UI scraping to get list values
+                # This would depend on how Legisway exposes this data
+                
+                # For now, return empty lists (to be implemented)
+                for list_type in list_types:
+                    logger.info(f"Récupération de la liste: {list_type}")
+                    # Placeholder - need to implement actual fetching logic
+                    lists[list_type] = []
+                
+                await browser.close()
+                
+                return {
+                    "success": True,
+                    "lists": lists
+                }
+                
+            except Exception as e:
+                await browser.close()
+                raise e
+                
+    except Exception as e:
+        logger.error(f"Fetch list values error: {str(e)}")
+        return {
+            "success": False,
+            "message": f"Erreur récupération listes: {str(e)}",
+            "lists": {}
+        }
+
 async def import_to_legisway(
     site_url: str,
     login: str,
