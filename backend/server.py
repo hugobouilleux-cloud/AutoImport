@@ -716,15 +716,40 @@ async def extract_format_table(request: SelectFormatRequest):
                         )
                 
                 # Extraire le tableau
-                logger.info("Attente du tableau...")
-                try:
-                    await page.wait_for_selector('table.k-grid-table', timeout=20000)
-                except Exception as e:
-                    logger.error(f"Tableau non trouvé: {str(e)}")
-                    # Essayer avec un autre sélecteur
-                    await page.wait_for_selector('kendo-grid', timeout=20000)
+                logger.info("Recherche du tableau de configuration...")
                 
-                await asyncio.sleep(3)
+                # Attendre le tableau avec plusieurs tentatives
+                table_found = False
+                max_attempts = 3
+                
+                for attempt in range(max_attempts):
+                    try:
+                        logger.info(f"Tentative {attempt + 1}/{max_attempts}...")
+                        await page.wait_for_selector('table.k-grid-table', timeout=15000)
+                        table_found = True
+                        logger.info("Tableau trouvé !")
+                        break
+                    except Exception as e:
+                        logger.warning(f"Tentative {attempt + 1} échouée: {str(e)}")
+                        if attempt < max_attempts - 1:
+                            await asyncio.sleep(2)
+                
+                if not table_found:
+                    # Dernier essai avec un sélecteur plus général
+                    try:
+                        await page.wait_for_selector('kendo-grid', timeout=10000)
+                        logger.info("Kendo-grid trouvé")
+                    except:
+                        await browser.close()
+                        return TableExtractionResult(
+                            success=False,
+                            message="Impossible de trouver le tableau de configuration",
+                            headers=[],
+                            rows=[],
+                            total_rows=0
+                        )
+                
+                await asyncio.sleep(2)
                 
                 table_data = await page.evaluate('''() => {
                     // Extraire les en-têtes
