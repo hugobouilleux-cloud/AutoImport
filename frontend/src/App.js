@@ -135,6 +135,7 @@ const Home = () => {
       formDataUpload.append('site_url', formData.site_url);
       formDataUpload.append('login', formData.login);
       formDataUpload.append('password', formData.password);
+      formDataUpload.append('system_password', formData.system_password);
       formDataUpload.append('selected_format', JSON.stringify(selectedFormat));
       formDataUpload.append('table_config', JSON.stringify(tableData));
 
