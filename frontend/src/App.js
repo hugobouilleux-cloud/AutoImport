@@ -449,10 +449,10 @@ const Home = () => {
                     {uploading ? (
                       <>
                         <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                        Import en cours...
+                        Vérification en cours...
                       </>
                     ) : (
-                      "Lancer l'import"
+                      "Vérifier fichier client"
                     )}
                   </Button>
                 )}
