@@ -823,6 +823,7 @@ async def execute_import(
     site_url: str = Form(...),
     login: str = Form(...),
     password: str = Form(...),
+    system_password: str = Form(...),
     selected_format: str = Form(...),
     table_config: str = Form(...)
 ):
