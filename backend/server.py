@@ -885,7 +885,7 @@ async def execute_import(
             table_config=table_config_data,
             site_url=site_url,
             login=login,
-            password=password
+            system_password=system_password
         )
         
         if not list_validation_result['success']:
