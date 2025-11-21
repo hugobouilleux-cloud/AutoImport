@@ -1286,58 +1286,50 @@ async def fetch_list_values_from_legisway(
                 try:
                     logger.info(f"Récupération de la liste: {list_type}")
                     
-                    # Get field definitions for the list type
-                    fields_url = f"{base_url}/api/v1/fields/{list_type}"
-                    fields_response = await client.get(
-                        fields_url,
+                    # Use search API directly to get all values
+                    search_url = f"{base_url}/resource/api/v1/search/{list_type}"
+                    search_response = await client.post(
+                        search_url,
+                        json={
+                            "offset": 0,
+                            "limit": 1000,
+                            "fields": ["title.fr", "name"]
+                        },
                         headers={
                             "Accept": "application/json",
+                            "Content-Type": "application/json",
                             "Authorization": f"Bearer {jwt_token}"
                         }
                     )
                     
-                    if fields_response.status_code == 200:
-                        fields_data = fields_response.json()
+                    values = []
+                    
+                    if search_response.status_code == 200:
+                        search_data = search_response.json()
+                        logger.info(f"Search API response keys: {search_data.keys() if isinstance(search_data, dict) else 'not a dict'}")
                         
-                        # Extract list values from the response
-                        # The response contains dividers with sections and fields
-                        # We need to extract the actual list values
-                        
-                        values = []
-                        
-                        # Parse the structure to find list values
-                        for divider in fields_data:
-                            if 'sections' in divider:
-                                for section in divider['sections']:
-                                    if 'fields' in section:
-                                        for field in section['fields']:
-                                            # If this field has filters or criteria, those are list values
-                                            if 'filters' in field and field['filters']:
-                                                for filter_item in field['filters']:
-                                                    if 'name' in filter_item:
-                                                        values.append(filter_item['name'])
+                        if 'data' in search_data:
+                            for item in search_data['data']:
+                                # Try to get the title or name
+                                if 'title' in item and isinstance(item['title'], dict) and 'fr' in item['title']:
+                                    values.append(item['title']['fr'])
+                                elif 'name' in item:
+                                    values.append(item['name'])
                             
-                            # Also check criteria at divider level
-                            if 'criteria' in divider and divider['criteria']:
-                                for criterion in divider['criteria']:
-                                    if 'name' in criterion:
-                                        values.append(criterion['name'])
+                            logger.info(f"Liste {list_type}: {len(values)} valeurs récupérées")
+                            if len(values) > 0:
+                                logger.info(f"Exemples: {values[:5]}")
+                        else:
+                            logger.warning(f"Pas de clé 'data' dans la réponse pour {list_type}")
+                    else:
+                        logger.warning(f"Erreur récupération {list_type}: {search_response.status_code}")
+                    
+                    lists[list_type] = list(set(values))  # Remove duplicates
+                    logger.info(f"Liste {list_type}: {len(lists[list_type])} valeurs uniques")
                         
-                        # If no values found from fields API, try search API
-                        if not values:
-                            logger.info(f"Essai avec l'API de recherche pour {list_type}")
-                            search_url = f"{base_url}/resource/api/v1/search/{list_type}"
-                            search_response = await client.post(
-                                search_url,
-                                json={
-                                    "offset": 0,
-                                    "limit": 1000,
-                                    "fields": ["title.fr", "name"]
-                                },
-                                headers={
-                                    "Accept": "application/json",
-                                    "Content-Type": "application/json",
-                                    "Authorization": f"Bearer {jwt_token}"
+                except Exception as e:
+                    logger.error(f"Erreur pour {list_type}: {str(e)}")
+                    lists[list_type] = []
                                 }
                             )
                             
