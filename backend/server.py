@@ -1238,7 +1238,8 @@ async def fetch_list_values_from_legisway(
             logger.info(f"Authentication à l'API Legisway pour {login}...")
             auth_url = f"{base_url}/resource/api/v1/auth/system"
             
-            auth_payload = {
+            # Use query parameters instead of JSON body
+            auth_params = {
                 "username": login,
                 "password": password,
                 "languageCode": "fr"
@@ -1249,10 +1250,9 @@ async def fetch_list_values_from_legisway(
             try:
                 auth_response = await client.post(
                     auth_url,
-                    json=auth_payload,
+                    params=auth_params,
                     headers={
-                        "Accept": "application/json",
-                        "Content-Type": "application/json"
+                        "Accept": "application/json"
                     }
                 )
                 
@@ -1262,7 +1262,7 @@ async def fetch_list_values_from_legisway(
                     logger.error(f"Authentication failed: {auth_response.status_code}, body: {auth_response.text[:200]}")
                     return {
                         "success": False,
-                        "message": f"Échec authentification API: {auth_response.status_code}",
+                        "message": f"Échec authentification API: {auth_response.status_code} - {auth_response.text[:100]}",
                         "lists": {}
                     }
                 
