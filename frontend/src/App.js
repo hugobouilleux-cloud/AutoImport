@@ -241,6 +241,21 @@ const Home = () => {
                 />
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="system_password" className="text-gray-700 font-medium">Mot de passe système (API)</Label>
+                <Input
+                  id="system_password"
+                  name="system_password"
+                  type="password"
+                  placeholder="Mot de passe système Legisway"
+                  value={formData.system_password}
+                  onChange={handleInputChange}
+                  className="h-11"
+                  data-testid="system-password-input"
+                />
+                <p className="text-xs text-gray-500">Utilisé pour l'authentification à l'API Legisway</p>
+              </div>
+
               {adminUrl && (
                 <Alert className="bg-blue-50 border-blue-200" data-testid="admin-url-result">
                   <div className="flex items-center gap-2">
