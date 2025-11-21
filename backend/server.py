@@ -1248,12 +1248,12 @@ async def fetch_list_values_from_legisway(
             logger.info(f"Auth URL: {auth_url}")
             
             try:
+                # Send as form-data (application/x-www-form-urlencoded)
                 auth_response = await client.post(
                     auth_url,
-                    json=auth_payload,
+                    data=auth_payload,
                     headers={
-                        "Accept": "application/json",
-                        "Content-Type": "application/json"
+                        "Accept": "application/json"
                     }
                 )
                 
