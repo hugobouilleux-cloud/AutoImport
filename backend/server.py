@@ -1065,7 +1065,7 @@ async def validate_list_values(
     table_config: Dict,
     site_url: str,
     login: str,
-    password: str
+    system_password: str
 ) -> Dict:
     """
     Validate that list values in Excel match allowed values from Legisway
