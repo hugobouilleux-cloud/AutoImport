@@ -1222,7 +1222,7 @@ async def validate_list_values(
 async def fetch_list_values_from_legisway(
     site_url: str,
     login: str,
-    password: str,
+    system_password: str,
     list_types: List[str]
 ) -> Dict:
     """
@@ -1239,10 +1239,9 @@ async def fetch_list_values_from_legisway(
             logger.info(f"Authentication système à l'API Legisway...")
             auth_url = f"{base_url}/resource/api/v1/auth/system"
             
-            # System authentication uses only password (not username)
-            # Password should be the system password defined in Legisway
+            # System authentication uses only system password (not user password)
             auth_payload = {
-                "password": password,
+                "password": system_password,
                 "languageCode": "fr"
             }
             
