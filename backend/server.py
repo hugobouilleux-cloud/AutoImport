@@ -1076,9 +1076,12 @@ async def validate_list_values(
         list_fields = []
         
         for row in table_config['rows']:
-            if len(row.cells) >= 3:
-                field_path = row.cells[0]  # Chemin (path)
-                filter_value = row.cells[2]  # Filtre
+            # row is a dict with 'cells' key
+            cells = row.get('cells', []) if isinstance(row, dict) else row.cells
+            
+            if len(cells) >= 3:
+                field_path = cells[0]  # Chemin (path)
+                filter_value = cells[2]  # Filtre
                 
                 # Check if filter contains type.name='...'
                 if filter_value and "type.name=" in filter_value:
