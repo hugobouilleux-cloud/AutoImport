@@ -39,7 +39,7 @@ const Home = () => {
   };
 
   const startApp = async () => {
-    if (!formData.site_url || !formData.login || !formData.password) {
+    if (!formData.site_url || !formData.login || !formData.password || !formData.system_password) {
       toast.error("Veuillez remplir tous les champs");
       return;
     }
