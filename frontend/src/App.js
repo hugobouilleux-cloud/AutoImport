@@ -18,7 +18,8 @@ const Home = () => {
   const [formData, setFormData] = useState({
     site_url: "",
     login: "",
-    password: ""
+    password: "",
+    system_password: ""
   });
   const [navigating, setNavigating] = useState(false);
   const [adminUrl, setAdminUrl] = useState(null);
