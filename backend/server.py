@@ -968,9 +968,12 @@ def validate_key_columns(excel_data: Dict, table_config: Dict) -> Dict:
         
         # Find which fields are marked as keys
         for row in table_config['rows']:
-            if len(row.cells) >= 2:
-                field_path = row.cells[0]  # Chemin (path)
-                is_key = row.cells[1]      # Clé (Oui/Non)
+            # row is a dict with 'cells' key
+            cells = row.get('cells', []) if isinstance(row, dict) else row.cells
+            
+            if len(cells) >= 2:
+                field_path = cells[0]  # Chemin (path)
+                is_key = cells[1]      # Clé (Oui/Non)
                 
                 if is_key == "Oui":
                     key_fields.append(field_path)
