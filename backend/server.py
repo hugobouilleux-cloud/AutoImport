@@ -1110,7 +1110,7 @@ async def validate_list_values(
         list_values_cache = await fetch_list_values_from_legisway(
             site_url=site_url,
             login=login,
-            password=password,
+            system_password=system_password,
             list_types=[field['list_type'] for field in list_fields]
         )
         
