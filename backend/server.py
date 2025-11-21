@@ -1234,13 +1234,13 @@ async def fetch_list_values_from_legisway(
         base_url = f"{parsed.scheme}://{parsed.netloc}"
         
         async with httpx.AsyncClient(verify=False, timeout=60.0) as client:
-            # Step 1: Authenticate and get JWT token
-            logger.info(f"Authentication à l'API Legisway pour {login}...")
+            # Step 1: Authenticate and get JWT token using system password
+            logger.info(f"Authentication système à l'API Legisway...")
             auth_url = f"{base_url}/resource/api/v1/auth/system"
             
-            # Use query parameters instead of JSON body
-            auth_params = {
-                "username": login,
+            # System authentication uses only password (not username)
+            # Password should be the system password defined in Legisway
+            auth_payload = {
                 "password": password,
                 "languageCode": "fr"
             }
@@ -1250,9 +1250,10 @@ async def fetch_list_values_from_legisway(
             try:
                 auth_response = await client.post(
                     auth_url,
-                    params=auth_params,
+                    json=auth_payload,
                     headers={
-                        "Accept": "application/json"
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
                     }
                 )
                 
@@ -1266,6 +1267,7 @@ async def fetch_list_values_from_legisway(
                         "lists": {}
                     }
                 
+                # Remove quotes from JWT token
                 jwt_token = auth_response.text.strip('"')
                 logger.info(f"Token JWT obtenu (length: {len(jwt_token)})")
                 
