@@ -1235,30 +1235,47 @@ async def fetch_list_values_from_legisway(
         
         async with httpx.AsyncClient(verify=False, timeout=60.0) as client:
             # Step 1: Authenticate and get JWT token
-            logger.info("Authentication à l'API Legisway...")
+            logger.info(f"Authentication à l'API Legisway pour {login}...")
             auth_url = f"{base_url}/resource/api/v1/auth/system"
-            auth_response = await client.post(
-                auth_url,
-                json={
-                    "password": password,
-                    "languageCode": "fr"
-                },
-                headers={
-                    "Accept": "application/json",
-                    "Content-Type": "application/json"
-                }
-            )
             
-            if auth_response.status_code != 200:
-                logger.error(f"Authentication failed: {auth_response.status_code}")
+            auth_payload = {
+                "username": login,
+                "password": password,
+                "languageCode": "fr"
+            }
+            
+            logger.info(f"Auth URL: {auth_url}")
+            
+            try:
+                auth_response = await client.post(
+                    auth_url,
+                    json=auth_payload,
+                    headers={
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    }
+                )
+                
+                logger.info(f"Auth response status: {auth_response.status_code}")
+                
+                if auth_response.status_code != 200:
+                    logger.error(f"Authentication failed: {auth_response.status_code}, body: {auth_response.text[:200]}")
+                    return {
+                        "success": False,
+                        "message": f"Échec authentification API: {auth_response.status_code}",
+                        "lists": {}
+                    }
+                
+                jwt_token = auth_response.text.strip('"')
+                logger.info(f"Token JWT obtenu (length: {len(jwt_token)})")
+                
+            except Exception as e:
+                logger.error(f"Auth request error: {str(e)}")
                 return {
                     "success": False,
-                    "message": f"Échec authentification API: {auth_response.status_code}",
+                    "message": f"Erreur requête auth: {str(e)}",
                     "lists": {}
                 }
-            
-            jwt_token = auth_response.text.strip('"')
-            logger.info("Token JWT obtenu")
             
             # Step 2: For each list type, fetch field definitions
             lists = {}
