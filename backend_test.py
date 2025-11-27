@@ -78,6 +78,38 @@ def test_cors_headers():
         print(f"⚠️  CORS Test WARNING: {str(e)}")
         return True  # Not critical for basic functionality
 
+def test_connection_endpoints():
+    """Test that connection endpoints are accessible (without authentication)"""
+    print(f"\n🔍 Testing Connection Endpoints Accessibility...")
+    
+    endpoints_to_test = [
+        "/api/connection/list",
+    ]
+    
+    accessible_endpoints = 0
+    
+    for endpoint in endpoints_to_test:
+        try:
+            response = requests.get(f"{BACKEND_URL}{endpoint}", timeout=10)
+            print(f"   {endpoint}: HTTP {response.status_code}")
+            
+            # For connection endpoints, we expect either 200 (success) or 4xx (auth required)
+            # Both indicate the endpoint is accessible and the server is working
+            if response.status_code < 500:
+                accessible_endpoints += 1
+            else:
+                print(f"      ❌ Server error: {response.status_code}")
+                
+        except Exception as e:
+            print(f"   {endpoint}: ❌ Error - {str(e)}")
+    
+    if accessible_endpoints == len(endpoints_to_test):
+        print("✅ Connection Endpoints ACCESSIBLE")
+        return True
+    else:
+        print(f"⚠️  Some endpoints had server errors ({accessible_endpoints}/{len(endpoints_to_test)} accessible)")
+        return accessible_endpoints > 0  # At least some working
+
 def main():
     """Run all health check tests"""
     print("=" * 60)
@@ -92,6 +124,9 @@ def main():
     
     # Test CORS configuration
     results.append(test_cors_headers())
+    
+    # Test connection endpoints accessibility
+    results.append(test_connection_endpoints())
     
     print("\n" + "=" * 60)
     print("📊 TEST SUMMARY")
