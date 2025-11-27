@@ -1171,10 +1171,12 @@ async def validate_list_values(
     table_config: Dict,
     site_url: str,
     login: str,
-    system_password: str
+    system_password: str,
+    pre_fetched_lists: Optional[Dict] = None
 ) -> Dict:
     """
     Validate that list values in Excel match allowed values from Legisway
+    Now accepts pre_fetched_lists to avoid re-fetching during validation
     """
     try:
         # Extract fields with filters from table_config
