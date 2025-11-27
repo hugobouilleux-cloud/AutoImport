@@ -220,6 +220,8 @@ test_plan:
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
+  completed_tasks:
+    - "Endpoint /api/connection/fetch-lists pour récupération des listes de référence"
 
 agent_communication:
   - agent: "main"
