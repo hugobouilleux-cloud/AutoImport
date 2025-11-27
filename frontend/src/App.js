@@ -168,6 +168,7 @@ const Home = () => {
       formDataUpload.append('system_password', formData.system_password);
       formDataUpload.append('selected_format', JSON.stringify(selectedFormat));
       formDataUpload.append('table_config', JSON.stringify(tableData));
+      formDataUpload.append('reference_lists', JSON.stringify(referenceLists));
 
       const response = await axios.post(`${API}/import/execute`, formDataUpload, {
         headers: {
