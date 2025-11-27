@@ -1187,6 +1187,8 @@ async def validate_list_values(
                         else:
                             logger.info(f"  -> VALIDE")
         
+        logger.info(f"Validation terminée: {values_checked} valeurs vérifiées, {len(invalid_values)} invalides")
+        
         if invalid_values:
             # Group by column
             invalid_by_column = {}
