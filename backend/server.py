@@ -591,7 +591,7 @@ async def select_format_in_table(request: SelectFormatRequest):
                             }
                         }''')
                         await asyncio.sleep(2)
-                        await page.wait_for_load_state("networkidle", timeout=10000)
+                        await page.wait_for_load_state("load", timeout=20000)
                         page_number += 1
                     else:
                         await browser.close()
@@ -730,7 +730,7 @@ async def extract_format_table(request: SelectFormatRequest):
                             }
                         }''')
                         await asyncio.sleep(2)
-                        await page.wait_for_load_state("networkidle", timeout=10000)
+                        await page.wait_for_load_state("load", timeout=20000)
                         page_number += 1
                     else:
                         await browser.close()
