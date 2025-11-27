@@ -1523,7 +1523,7 @@ async def import_to_legisway(
             try:
                 # Navigate and login
                 logger.info("Connexion à Legisway...")
-                await page.goto(site_url, timeout=30000, wait_until="networkidle")
+                await page.goto(site_url, timeout=30000, wait_until="load")
                 await asyncio.sleep(1)
                 
                 await page.fill('input[name="j_username"]', login, timeout=5000)
