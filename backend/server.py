@@ -1434,18 +1434,12 @@ async def fetch_list_values_from_legisway(
                 try:
                     logger.info(f"Récupération de la liste: {list_type}")
                     
-                    # Use search API directly to get all values
-                    search_url = f"{base_url}/resource/api/v1/search/{list_type}"
-                    search_response = await client.post(
+                    # Try GET method first (Legisway doesn't support POST for search)
+                    search_url = f"{base_url}/resource/api/v1/search/{list_type}?offset=0&limit=1000"
+                    search_response = await client.get(
                         search_url,
-                        json={
-                            "offset": 0,
-                            "limit": 1000,
-                            "fields": ["title.fr", "name"]
-                        },
                         headers={
                             "Accept": "application/json",
-                            "Content-Type": "application/json",
                             "Authorization": f"Bearer {jwt_token}"
                         }
                     )
