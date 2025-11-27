@@ -441,8 +441,8 @@ async def extract_import_formats(connection_data: ConnectionTest):
                                 }
                             }''')
                             await asyncio.sleep(2)
-                            await page.wait_for_load_state("networkidle", timeout=10000)
-                            await asyncio.sleep(1)
+                            await page.wait_for_load_state("load", timeout=20000)
+                            await asyncio.sleep(2)
                             page_number += 1
                         else:
                             logger.info(f"Fin de la pagination - Total: {len(all_formats)} formats")
