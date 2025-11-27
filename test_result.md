@@ -212,3 +212,5 @@ test_plan:
 agent_communication:
   - agent: "main"
     message: "Backend redémarré avec succès. Ajout de logging détaillé dans fetch_list_values_from_legisway et validate_list_values pour identifier pourquoi les valeurs invalides passent la validation. Le logging inclut: structure complète de la réponse API, nombre d'items dans data, extraction des valeurs, mapping des colonnes Excel, et validation ligne par ligne. Prêt pour test avec un fichier Excel contenant des valeurs invalides."
+  - agent: "testing"
+    message: "Backend health check completed successfully. API is responding correctly at https://data-import-tools.preview.emergentagent.com/api/ with status 200. All basic endpoints accessible. Server is healthy and ready after recent modifications (indentation fix and logging additions). Validation endpoints not tested per user request - user wants to test with their own Excel file. Backend is ready for validation testing when user provides test file."
