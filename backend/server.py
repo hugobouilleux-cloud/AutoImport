@@ -927,15 +927,18 @@ async def execute_import(
     password: str = Form(...),
     system_password: str = Form(...),
     selected_format: str = Form(...),
-    table_config: str = Form(...)
+    table_config: str = Form(...),
+    reference_lists: str = Form(None)
 ):
     """
     Execute the import with the uploaded file (Excel only for now)
+    Now accepts pre-fetched reference_lists to avoid re-fetching during validation
     """
     try:
         # Parse JSON strings
         selected_format_data = json.loads(selected_format)
         table_config_data = json.loads(table_config)
+        reference_lists_data = json.loads(reference_lists) if reference_lists else None
         
         # Save uploaded file temporarily
         upload_dir = Path("/tmp/uploads")
