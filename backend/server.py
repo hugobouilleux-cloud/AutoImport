@@ -233,7 +233,7 @@ async def navigate_to_admin(connection_data: ConnectionTest):
             
             try:
                 # Étape 1: Aller sur la page de login
-                await page.goto(connection_data.site_url, timeout=30000, wait_until="networkidle")
+                await page.goto(connection_data.site_url, timeout=30000, wait_until="load")
                 await asyncio.sleep(1)
                 
                 # Étape 2: Remplir le formulaire de connexion
@@ -356,7 +356,7 @@ async def extract_import_formats(connection_data: ConnectionTest):
             
             try:
                 # Étape 1: Connexion (même processus que navigate-admin)
-                await page.goto(connection_data.site_url, timeout=30000, wait_until="networkidle")
+                await page.goto(connection_data.site_url, timeout=30000, wait_until="load")
                 await asyncio.sleep(1)
                 
                 await page.fill('input[name="j_username"]', connection_data.login, timeout=5000)
