@@ -1121,27 +1121,34 @@ async def validate_list_values(
             }
         
         logger.info(f"Listes récupérées: {len(list_values_cache['lists'])}")
+        for list_name, list_vals in list_values_cache['lists'].items():
+            logger.info(f"  - {list_name}: {len(list_vals)} valeurs")
         
         # Map Excel headers to list fields
         excel_headers = excel_data['headers']
+        logger.info(f"En-têtes Excel: {excel_headers}")
         list_column_indices = []
         
         for list_field in list_fields:
             field_path = list_field['field_path']
             list_type = list_field['list_type']
+            logger.info(f"Recherche colonne pour: {field_path} (type: {list_type})")
             
             # Find matching column in Excel
             for idx, header in enumerate(excel_headers):
                 if header.strip() == field_path.strip() or field_path.strip() in header.strip():
+                    allowed_vals = list_values_cache['lists'].get(list_type, [])
+                    logger.info(f"  -> Trouvé à l'index {idx}, {len(allowed_vals)} valeurs autorisées")
                     list_column_indices.append({
                         "col_idx": idx,
                         "field_path": field_path,
                         "list_type": list_type,
-                        "allowed_values": list_values_cache['lists'].get(list_type, [])
+                        "allowed_values": allowed_vals
                     })
                     break
         
         if not list_column_indices:
+            logger.warning("Aucune colonne de liste trouvée dans Excel!")
             return {
                 "success": True,
                 "message": "Aucune colonne de liste trouvée dans Excel"
