@@ -316,9 +316,9 @@ def test_fetch_lists_parameter_validation():
         return validation_passed > 0
 
 def main():
-    """Run all health check tests"""
+    """Run all backend tests including the new fetch-lists endpoint"""
     print("=" * 60)
-    print("🚀 BACKEND API HEALTH CHECK")
+    print("🚀 BACKEND API COMPREHENSIVE TEST")
     print(f"Timestamp: {datetime.now().isoformat()}")
     print("=" * 60)
     
@@ -333,6 +333,12 @@ def main():
     # Test connection endpoints accessibility
     results.append(test_connection_endpoints())
     
+    # Test new fetch-lists endpoint
+    results.append(test_fetch_lists_endpoint())
+    
+    # Test fetch-lists parameter validation
+    results.append(test_fetch_lists_parameter_validation())
+    
     print("\n" + "=" * 60)
     print("📊 TEST SUMMARY")
     print("=" * 60)
@@ -343,6 +349,7 @@ def main():
     if passed == total:
         print(f"✅ ALL TESTS PASSED ({passed}/{total})")
         print("🎉 Backend API is healthy and ready!")
+        print("🎯 /api/connection/fetch-lists endpoint is working correctly!")
         return 0
     else:
         print(f"⚠️  SOME TESTS HAD ISSUES ({passed}/{total} passed)")
