@@ -489,7 +489,7 @@ async def select_format_in_table(request: SelectFormatRequest):
             
             try:
                 # Étape 1: Connexion
-                await page.goto(request.site_url, timeout=30000, wait_until="networkidle")
+                await page.goto(request.site_url, timeout=30000, wait_until="load")
                 await asyncio.sleep(1)
                 
                 await page.fill('input[name="j_username"]', request.login, timeout=5000)
@@ -629,7 +629,7 @@ async def extract_format_table(request: SelectFormatRequest):
             
             try:
                 # Étape 1: Connexion
-                await page.goto(request.site_url, timeout=30000, wait_until="networkidle")
+                await page.goto(request.site_url, timeout=30000, wait_until="load")
                 await asyncio.sleep(1)
                 
                 await page.fill('input[name="j_username"]', request.login, timeout=5000)
