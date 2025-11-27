@@ -252,8 +252,8 @@ async def navigate_to_admin(connection_data: ConnectionTest):
                 await page.click('button[type="submit"]', timeout=5000)
                 
                 # Attendre la navigation
-                await page.wait_for_load_state("networkidle", timeout=15000)
-                await asyncio.sleep(2)
+                await page.wait_for_load_state("load", timeout=30000)
+                await asyncio.sleep(3)
                 
                 # Étape 4: Cliquer sur l'icône utilisateur
                 try:
