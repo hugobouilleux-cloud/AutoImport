@@ -1434,19 +1434,42 @@ async def fetch_list_values_from_legisway(
                 try:
                     logger.info(f"Récupération de la liste: {list_type}")
                     
-                    # Try GET method first (Legisway doesn't support POST for search)
-                    search_url = f"{base_url}/resource/api/v1/search/{list_type}?offset=0&limit=1000"
-                    search_response = await client.get(
-                        search_url,
-                        headers={
-                            "Accept": "application/json",
-                            "Authorization": f"Bearer {jwt_token}"
-                        }
-                    )
-                    
+                    # Try multiple approaches to get list values
                     values = []
+                    search_response = None
                     
-                    if search_response.status_code == 200:
+                    # Approach 1: Try GET /search/{list_type}
+                    try:
+                        search_url = f"{base_url}/resource/api/v1/search/{list_type}?offset=0&limit=1000"
+                        logger.info(f"Tentative GET: {search_url}")
+                        search_response = await client.get(
+                            search_url,
+                            headers={
+                                "Accept": "application/json",
+                                "Authorization": f"Bearer {jwt_token}"
+                            }
+                        )
+                        logger.info(f"GET response: {search_response.status_code}")
+                    except Exception as e:
+                        logger.warning(f"GET /search failed: {str(e)}")
+                    
+                    # Approach 2: Try GET /{list_type}
+                    if not search_response or search_response.status_code != 200:
+                        try:
+                            direct_url = f"{base_url}/resource/api/v1/{list_type}?offset=0&limit=1000"
+                            logger.info(f"Tentative GET direct: {direct_url}")
+                            search_response = await client.get(
+                                direct_url,
+                                headers={
+                                    "Accept": "application/json",
+                                    "Authorization": f"Bearer {jwt_token}"
+                                }
+                            )
+                            logger.info(f"GET direct response: {search_response.status_code}")
+                        except Exception as e:
+                            logger.warning(f"GET direct failed: {str(e)}")
+                    
+                    if search_response and search_response.status_code == 200:
                         search_data = search_response.json()
                         logger.info(f"Search API response keys: {search_data.keys() if isinstance(search_data, dict) else 'not a dict'}")
                         logger.info(f"Search API response complète: {str(search_data)[:500]}")  # First 500 chars
