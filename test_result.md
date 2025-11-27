@@ -101,3 +101,99 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: "L'application AutoImport by VPWhite doit valider les fichiers Excel avant import dans Legisway. Le problème actuel est que la validation des valeurs de liste ne fonctionne pas - des valeurs incorrectes passent la validation alors qu'elles devraient être rejetées."
+
+backend:
+  - task: "Validation des colonnes clés (mandatory fields)"
+    implemented: true
+    working: "NA"
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Validation des colonnes obligatoires implémentée, pas testée récemment"
+  
+  - task: "Validation des valeurs de liste via API Legisway"
+    implemented: true
+    working: false
+    file: "backend/server.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "user"
+        comment: "L'utilisateur rapporte que des valeurs incorrectes passent la validation"
+      - working: false
+        agent: "main"
+        comment: "Erreur d'indentation corrigée. Ajout de logging détaillé pour debug: réponse API complète, nombre d'items, validation ligne par ligne. Le problème peut venir de: (1) API retourne données mais structure différente, (2) Aucune valeur extraite malgré data présent, (3) Colonnes Excel non trouvées. Prêt pour test avec fichier contenant valeurs invalides."
+  
+  - task: "Authentification API Legisway (System)"
+    implemented: true
+    working: "NA"
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Authentification système implémentée avec form-data"
+  
+  - task: "Navigation Playwright vers import formats"
+    implemented: true
+    working: "NA"
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Navigation et scraping des formats d'import implémentés"
+
+frontend:
+  - task: "Interface de login avec mot de passe système"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/App.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "UI avec champs login, password, et system password"
+  
+  - task: "Affichage des erreurs de validation"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Messages d'erreur affichés, besoin de vérifier avec vraies erreurs de validation"
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 0
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Validation des valeurs de liste via API Legisway"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "main"
+    message: "Backend redémarré avec succès. Ajout de logging détaillé dans fetch_list_values_from_legisway et validate_list_values pour identifier pourquoi les valeurs invalides passent la validation. Le logging inclut: structure complète de la réponse API, nombre d'items dans data, extraction des valeurs, mapping des colonnes Excel, et validation ligne par ligne. Prêt pour test avec un fichier Excel contenant des valeurs invalides."
