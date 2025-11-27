@@ -89,6 +89,22 @@ class TableExtractionResult(BaseModel):
     rows: List[TableRow]
     total_rows: int
 
+class FetchListsRequest(BaseModel):
+    site_url: str
+    login: str
+    system_password: str
+    table_config: TableExtractionResult
+
+class ListFieldInfo(BaseModel):
+    field_path: str
+    list_type: str
+    values: List[str]
+
+class FetchListsResult(BaseModel):
+    success: bool
+    message: str
+    list_fields: List[ListFieldInfo] = []
+
 # Add your routes to the router instead of directly to app
 @api_router.get("/")
 async def root():
