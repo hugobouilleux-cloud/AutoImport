@@ -1330,28 +1330,6 @@ async def fetch_list_values_from_legisway(
                 except Exception as e:
                     logger.error(f"Erreur pour {list_type}: {str(e)}")
                     lists[list_type] = []
-                                }
-                            )
-                            
-                            if search_response.status_code == 200:
-                                search_data = search_response.json()
-                                if 'data' in search_data:
-                                    for item in search_data['data']:
-                                        # Try to get the title or name
-                                        if 'title' in item and 'fr' in item['title']:
-                                            values.append(item['title']['fr'])
-                                        elif 'name' in item:
-                                            values.append(item['name'])
-                        
-                        lists[list_type] = list(set(values))  # Remove duplicates
-                        logger.info(f"Liste {list_type}: {len(lists[list_type])} valeurs")
-                    else:
-                        logger.warning(f"Impossible de récupérer {list_type}: {fields_response.status_code}")
-                        lists[list_type] = []
-                        
-                except Exception as e:
-                    logger.error(f"Erreur pour {list_type}: {str(e)}")
-                    lists[list_type] = []
             
             return {
                 "success": True,
