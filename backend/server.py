@@ -552,7 +552,7 @@ async def select_format_in_table(request: SelectFormatRequest):
                         format_found = True
                         logger.info(f"Format trouvé et cliqué sur la page {page_number}")
                         await asyncio.sleep(2)
-                        await page.wait_for_load_state("networkidle", timeout=15000)
+                        await page.wait_for_load_state("load", timeout=30000)
                         
                         current_url = page.url
                         await browser.close()
