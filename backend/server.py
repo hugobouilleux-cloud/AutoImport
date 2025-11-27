@@ -1471,14 +1471,35 @@ async def fetch_list_values_from_legisway(
                     
                     if search_response and search_response.status_code == 200:
                         search_data = search_response.json()
-                        logger.info(f"Search API response keys: {search_data.keys() if isinstance(search_data, dict) else 'not a dict'}")
-                        logger.info(f"Search API response complète: {str(search_data)[:500]}")  # First 500 chars
                         
-                        if 'data' in search_data:
-                            logger.info(f"Nombre d'items dans data: {len(search_data['data'])}")
+                        # Check if response is a list (Legisway format) or dict with 'data' key
+                        if isinstance(search_data, list):
+                            logger.info(f"API retourné une liste directe avec {len(search_data)} items")
+                            # Process list directly - Legisway returns list with _title field
+                            for item in search_data:
+                                if isinstance(item, dict):
+                                    # Try different field names
+                                    if '_title' in item:
+                                        values.append(item['_title'])
+                                    elif 'title' in item:
+                                        if isinstance(item['title'], dict) and 'fr' in item['title']:
+                                            values.append(item['title']['fr'])
+                                        else:
+                                            values.append(str(item['title']))
+                                    elif 'name' in item:
+                                        values.append(item['name'])
+                            
+                            logger.info(f"Liste {list_type}: {len(values)} valeurs extraites")
+                            if len(values) > 0:
+                                logger.info(f"Exemples: {values[:5]}")
+                        
+                        elif isinstance(search_data, dict) and 'data' in search_data:
+                            logger.info(f"API retourné un dict avec clé 'data' ({len(search_data['data'])} items)")
                             for item in search_data['data']:
                                 # Try to get the title or name
-                                if 'title' in item and isinstance(item['title'], dict) and 'fr' in item['title']:
+                                if '_title' in item:
+                                    values.append(item['_title'])
+                                elif 'title' in item and isinstance(item['title'], dict) and 'fr' in item['title']:
                                     values.append(item['title']['fr'])
                                 elif 'name' in item:
                                     values.append(item['name'])
@@ -1486,13 +1507,10 @@ async def fetch_list_values_from_legisway(
                             logger.info(f"Liste {list_type}: {len(values)} valeurs récupérées")
                             if len(values) > 0:
                                 logger.info(f"Exemples: {values[:5]}")
-                            else:
-                                logger.warning(f"ATTENTION: 0 valeurs extraites alors que data contient {len(search_data['data'])} items")
-                                if len(search_data['data']) > 0:
-                                    logger.info(f"Exemple d'item: {search_data['data'][0]}")
+                        
                         else:
-                            logger.warning(f"Pas de clé 'data' dans la réponse pour {list_type}")
-                            logger.info(f"Réponse complète: {search_data}")
+                            logger.warning(f"Format de réponse inattendu pour {list_type}")
+                            logger.info(f"Type: {type(search_data)}, Contenu: {str(search_data)[:500]}")
                     else:
                         logger.warning(f"Erreur récupération {list_type}: {search_response.status_code}")
                         logger.info(f"Réponse erreur: {search_response.text[:500]}")
