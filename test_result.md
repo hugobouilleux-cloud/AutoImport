@@ -170,6 +170,18 @@ backend:
       - working: "NA"
         agent: "main"
         comment: "Navigation et scraping des formats d'import implémentés"
+  
+  - task: "Endpoint /api/connection/fetch-lists pour récupération des listes de référence"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "ENDPOINT TESTÉ ET VALIDÉ AVEC SUCCÈS: ✅ Structure de réponse correcte (success: bool, message: string, list_fields: array), ✅ Validation complète des paramètres requis (site_url, login, system_password, table_config), ✅ Extraction correcte des champs avec filtres type.name='...', ✅ Identification précise de 3 types de listes (ContractType, ClientCategory, ProjectStatus) depuis table_config, ✅ Gestion d'erreur appropriée avec fausses credentials, ✅ Logs backend confirment le bon fonctionnement. L'endpoint répond parfaitement aux spécifications demandées."
 
 frontend:
   - task: "Interface de login avec mot de passe système"
