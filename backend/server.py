@@ -990,7 +990,8 @@ async def execute_import(
             table_config=table_config_data,
             site_url=site_url,
             login=login,
-            system_password=system_password
+            system_password=system_password,
+            pre_fetched_lists=reference_lists_data
         )
         
         if not list_validation_result['success']:
