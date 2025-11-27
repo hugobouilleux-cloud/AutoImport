@@ -368,23 +368,26 @@ async def extract_import_formats(connection_data: ConnectionTest):
                 await asyncio.sleep(0.5)
                 await page.click('button[type="submit"]', timeout=5000)
                 
-                await page.wait_for_load_state("networkidle", timeout=15000)
+                # Wait for login to complete - use 'load' instead of 'networkidle'
+                await page.wait_for_load_state("load", timeout=30000)
                 await asyncio.sleep(2)
                 
-                # Cliquer sur l'icône utilisateur
+                # Wait for user icon to be available
+                await page.wait_for_selector('.icon-user', timeout=10000)
                 await page.click('.icon-user', timeout=5000)
                 await asyncio.sleep(1)
                 
                 # Cliquer sur Administration
-                await page.wait_for_selector('button[mat-menu-item]', timeout=5000)
+                await page.wait_for_selector('button[mat-menu-item]', timeout=10000)
                 await page.click('button.user-menu-item:has-text("Administration")', timeout=5000)
-                await page.wait_for_load_state("networkidle", timeout=15000)
-                await asyncio.sleep(2)
+                await page.wait_for_load_state("load", timeout=30000)
+                await asyncio.sleep(3)
                 
                 # Étape 2: Cliquer sur "Import de données"
+                await page.wait_for_selector('a:has-text("Import de données")', timeout=10000)
                 await page.click('a:has-text("Import de données")', timeout=10000)
-                await page.wait_for_load_state("networkidle", timeout=15000)
-                await asyncio.sleep(2)
+                await page.wait_for_load_state("load", timeout=30000)
+                await asyncio.sleep(3)
                 
                 # Étape 3: Extraire tous les formats avec pagination
                 all_formats = []
@@ -498,23 +501,26 @@ async def select_format_in_table(request: SelectFormatRequest):
                 await asyncio.sleep(0.5)
                 await page.click('button[type="submit"]', timeout=5000)
                 
-                await page.wait_for_load_state("networkidle", timeout=15000)
+                # Wait for login to complete - use 'load' instead of 'networkidle'
+                await page.wait_for_load_state("load", timeout=30000)
                 await asyncio.sleep(2)
                 
-                # Cliquer sur l'icône utilisateur
+                # Wait for user icon to be available
+                await page.wait_for_selector('.icon-user', timeout=10000)
                 await page.click('.icon-user', timeout=5000)
                 await asyncio.sleep(1)
                 
                 # Cliquer sur Administration
-                await page.wait_for_selector('button[mat-menu-item]', timeout=5000)
+                await page.wait_for_selector('button[mat-menu-item]', timeout=10000)
                 await page.click('button.user-menu-item:has-text("Administration")', timeout=5000)
-                await page.wait_for_load_state("networkidle", timeout=15000)
-                await asyncio.sleep(2)
+                await page.wait_for_load_state("load", timeout=30000)
+                await asyncio.sleep(3)
                 
                 # Étape 2: Cliquer sur "Import de données"
+                await page.wait_for_selector('a:has-text("Import de données")', timeout=10000)
                 await page.click('a:has-text("Import de données")', timeout=10000)
-                await page.wait_for_load_state("networkidle", timeout=15000)
-                await asyncio.sleep(2)
+                await page.wait_for_load_state("load", timeout=30000)
+                await asyncio.sleep(3)
                 
                 # Étape 3: Chercher et cliquer sur le format sélectionné dans le tableau
                 format_name = request.selected_format.name
