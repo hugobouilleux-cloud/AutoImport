@@ -832,6 +832,92 @@ async def extract_format_table(request: SelectFormatRequest):
             total_rows=0
         )
 
+@api_router.post("/connection/fetch-lists", response_model=FetchListsResult)
+async def fetch_reference_lists(request: FetchListsRequest):
+    """
+    Fetch reference list values from Legisway API after table extraction
+    This allows users to see valid values before uploading their file
+    """
+    try:
+        logger.info("Extraction des champs avec listes de référence...")
+        
+        # Extract fields with list filters from table_config
+        list_fields_info = []
+        table_config = request.table_config
+        
+        for row in table_config.rows:
+            cells = row.cells if hasattr(row, 'cells') else row.get('cells', [])
+            
+            if len(cells) >= 3:
+                field_path = cells[0]  # Chemin (path)
+                filter_value = cells[2]  # Filtre
+                
+                # Check if filter contains type.name='...'
+                if filter_value and "type.name=" in filter_value:
+                    import re
+                    match = re.search(r"type\.name\s*=\s*['\"]([^'\"]+)['\"]", filter_value)
+                    if match:
+                        list_type = match.group(1)
+                        list_fields_info.append({
+                            "field_path": field_path,
+                            "list_type": list_type
+                        })
+        
+        logger.info(f"Champs avec listes trouvés: {len(list_fields_info)}")
+        
+        if not list_fields_info:
+            return FetchListsResult(
+                success=True,
+                message="Aucune liste de référence à récupérer",
+                list_fields=[]
+            )
+        
+        # Fetch list values from Legisway API
+        list_types = [field['list_type'] for field in list_fields_info]
+        logger.info(f"Récupération des listes: {list_types}")
+        
+        list_values_response = await fetch_list_values_from_legisway(
+            site_url=request.site_url,
+            login=request.login,
+            system_password=request.system_password,
+            list_types=list_types
+        )
+        
+        if not list_values_response['success']:
+            return FetchListsResult(
+                success=False,
+                message=f"Erreur récupération des listes: {list_values_response.get('message', 'Unknown error')}",
+                list_fields=[]
+            )
+        
+        # Build response with field info and values
+        result_list_fields = []
+        for field_info in list_fields_info:
+            list_type = field_info['list_type']
+            values = list_values_response['lists'].get(list_type, [])
+            
+            result_list_fields.append(ListFieldInfo(
+                field_path=field_info['field_path'],
+                list_type=list_type,
+                values=values
+            ))
+        
+        total_values = sum(len(field.values) for field in result_list_fields)
+        
+        return FetchListsResult(
+            success=True,
+            message=f"{len(result_list_fields)} listes récupérées ({total_values} valeurs au total)",
+            list_fields=result_list_fields
+        )
+        
+    except Exception as e:
+        logger.error(f"Fetch lists error: {str(e)}")
+        return FetchListsResult(
+            success=False,
+            message=f"Erreur: {str(e)}",
+            list_fields=[]
+        )
+
 @api_router.post("/import/execute")
 async def execute_import(
     file: UploadFile = File(...),
