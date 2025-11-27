@@ -307,8 +307,8 @@ async def navigate_to_admin(connection_data: ConnectionTest):
                         raise Exception("Impossible de cliquer sur Administration")
                     
                     # Attendre le chargement de la page d'administration
-                    await page.wait_for_load_state("networkidle", timeout=15000)
-                    await asyncio.sleep(2)
+                    await page.wait_for_load_state("load", timeout=30000)
+                    await asyncio.sleep(3)
                     
                     # Récupérer l'URL actuelle
                     current_url = page.url
