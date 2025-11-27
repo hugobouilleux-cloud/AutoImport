@@ -1213,24 +1213,39 @@ async def validate_list_values(
                 "message": "Aucune liste à valider"
             }
         
-        # Fetch list values from Legisway
-        logger.info("Récupération des listes depuis Legisway...")
-        list_values_cache = await fetch_list_values_from_legisway(
-            site_url=site_url,
-            login=login,
-            system_password=system_password,
-            list_types=[field['list_type'] for field in list_fields]
-        )
-        
-        if not list_values_cache['success']:
-            return {
-                "success": False,
-                "message": f"Erreur récupération des listes: {list_values_cache['message']}"
+        # Use pre-fetched lists if available, otherwise fetch from Legisway
+        if pre_fetched_lists and pre_fetched_lists.get('success') and pre_fetched_lists.get('list_fields'):
+            logger.info("Utilisation des listes pré-récupérées")
+            # Convert list_fields format to lists format
+            list_values_cache = {
+                'success': True,
+                'lists': {}
             }
-        
-        logger.info(f"Listes récupérées: {len(list_values_cache['lists'])}")
-        for list_name, list_vals in list_values_cache['lists'].items():
-            logger.info(f"  - {list_name}: {len(list_vals)} valeurs")
+            for list_field in pre_fetched_lists['list_fields']:
+                list_values_cache['lists'][list_field['list_type']] = list_field['values']
+            
+            logger.info(f"Listes pré-récupérées: {len(list_values_cache['lists'])}")
+            for list_name, list_vals in list_values_cache['lists'].items():
+                logger.info(f"  - {list_name}: {len(list_vals)} valeurs")
+        else:
+            # Fetch list values from Legisway
+            logger.info("Récupération des listes depuis Legisway...")
+            list_values_cache = await fetch_list_values_from_legisway(
+                site_url=site_url,
+                login=login,
+                system_password=system_password,
+                list_types=[field['list_type'] for field in list_fields]
+            )
+            
+            if not list_values_cache['success']:
+                return {
+                    "success": False,
+                    "message": f"Erreur récupération des listes: {list_values_cache['message']}"
+                }
+            
+            logger.info(f"Listes récupérées: {len(list_values_cache['lists'])}")
+            for list_name, list_vals in list_values_cache['lists'].items():
+                logger.info(f"  - {list_name}: {len(list_vals)} valeurs")
         
         # Map Excel headers to list fields
         excel_headers = excel_data['headers']
