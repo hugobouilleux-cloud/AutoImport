@@ -1158,6 +1158,7 @@ async def validate_list_values(
         
         # Validate values
         invalid_values = []
+        values_checked = 0
         
         for row_idx, row in enumerate(excel_data['rows'], start=2):  # Start at 2 (after header)
             for list_col in list_column_indices:
@@ -1168,10 +1169,14 @@ async def validate_list_values(
                     
                     # Empty values are allowed
                     if value and value != "":
+                        values_checked += 1
                         allowed_values = list_col['allowed_values']
+                        
+                        logger.info(f"Validation ligne {row_idx}, colonne {list_col['field_path']}: valeur='{value}', nb_autorisées={len(allowed_values)}")
                         
                         # Check if value is in allowed list
                         if value not in allowed_values:
+                            logger.warning(f"  -> INVALIDE: '{value}' non trouvée dans {len(allowed_values)} valeurs autorisées")
                             invalid_values.append({
                                 "row": row_idx,
                                 "column": list_col['field_path'],
@@ -1179,6 +1184,8 @@ async def validate_list_values(
                                 "list_type": list_col['list_type'],
                                 "allowed_values": allowed_values[:10]  # Show first 10 for error message
                             })
+                        else:
+                            logger.info(f"  -> VALIDE")
         
         if invalid_values:
             # Group by column
