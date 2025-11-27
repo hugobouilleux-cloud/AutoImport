@@ -81,27 +81,56 @@ const Home = () => {
 
     setNavigating(true);
     setTableData(null);
+    setReferenceLists(null);
     setShowFormatChoice(false);
 
     try {
-      const response = await axios.post(`${API}/connection/extract-table`, {
+      // Step 1: Extract table configuration
+      const tableResponse = await axios.post(`${API}/connection/extract-table`, {
         site_url: formData.site_url,
         login: formData.login,
         password: formData.password,
         selected_format: selectedFormat
       });
 
-      if (response.data.success) {
-        toast.success(`Configuration récupérée: ${response.data.total_rows} lignes !`);
-        setTableData(response.data);
+      if (!tableResponse.data.success) {
+        toast.error(tableResponse.data.message);
+        setNavigating(false);
+        return;
+      }
+
+      toast.success(`Configuration récupérée: ${tableResponse.data.total_rows} lignes !`);
+      setTableData(tableResponse.data);
+
+      // Step 2: Fetch reference lists
+      toast.info("Récupération des listes de référence...");
+      
+      const listsResponse = await axios.post(`${API}/connection/fetch-lists`, {
+        site_url: formData.site_url,
+        login: formData.login,
+        system_password: formData.system_password,
+        table_config: tableResponse.data
+      });
+
+      if (listsResponse.data.success) {
+        setReferenceLists(listsResponse.data);
+        if (listsResponse.data.list_fields.length > 0) {
+          toast.success(`${listsResponse.data.list_fields.length} listes de référence récupérées !`);
+        } else {
+          toast.info("Aucune liste de référence à valider");
+        }
         setFileFormat('excel'); // Auto-select Excel
         setShowFormatChoice(true);
       } else {
-        toast.error(response.data.message);
+        toast.error(`Erreur listes: ${listsResponse.data.message}`);
+        // Continue anyway, but without reference lists
+        setReferenceLists({ success: false, list_fields: [] });
+        setFileFormat('excel');
+        setShowFormatChoice(true);
       }
     } catch (error) {
-      console.error("Error extracting table:", error);
-      toast.error("Erreur lors de l'extraction du tableau");
+      console.error("Error in continueWithFormat:", error);
+      toast.error("Erreur lors de la récupération des données");
     } finally {
       setNavigating(false);
     }
