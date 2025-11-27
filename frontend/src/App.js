@@ -27,6 +27,7 @@ const Home = () => {
   const [selectedFormat, setSelectedFormat] = useState(null);
   const [showFormats, setShowFormats] = useState(false);
   const [tableData, setTableData] = useState(null);
+  const [referenceLists, setReferenceLists] = useState(null);
   const [showFormatChoice, setShowFormatChoice] = useState(false);
   const [fileFormat, setFileFormat] = useState(null);
   const [uploadedFile, setUploadedFile] = useState(null);
