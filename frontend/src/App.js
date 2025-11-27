@@ -427,6 +427,52 @@ const Home = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="pt-6 space-y-6">
+                
+                {/* Reference Lists Display */}
+                {referenceLists && referenceLists.list_fields && referenceLists.list_fields.length > 0 && (
+                  <div className="space-y-3">
+                    <Alert className="bg-blue-50 border-blue-300">
+                      <CheckCircle2 className="w-5 h-5 text-blue-600" />
+                      <AlertDescription className="text-blue-800">
+                        <strong className="block mb-2">Listes de référence récupérées :</strong>
+                        <div className="space-y-3 mt-3">
+                          {referenceLists.list_fields.map((listField, idx) => (
+                            <div key={idx} className="bg-white rounded-lg p-3 border border-blue-200">
+                              <div className="flex items-start gap-2 mb-2">
+                                <span className="font-semibold text-gray-900">{listField.field_path}</span>
+                                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                                  {listField.values.length} valeurs
+                                </span>
+                              </div>
+                              <details className="text-sm text-gray-600">
+                                <summary className="cursor-pointer hover:text-blue-600">
+                                  Voir les valeurs autorisées
+                                </summary>
+                                <div className="mt-2 max-h-40 overflow-y-auto bg-gray-50 p-2 rounded">
+                                  {listField.values.length > 0 ? (
+                                    <ul className="list-disc list-inside space-y-1">
+                                      {listField.values.slice(0, 20).map((value, vIdx) => (
+                                        <li key={vIdx} className="text-xs">{value}</li>
+                                      ))}
+                                      {listField.values.length > 20 && (
+                                        <li className="text-xs text-gray-500 italic">
+                                          ... et {listField.values.length - 20} autres
+                                        </li>
+                                      )}
+                                    </ul>
+                                  ) : (
+                                    <p className="text-xs text-gray-500 italic">Aucune valeur disponible</p>
+                                  )}
+                                </div>
+                              </details>
+                            </div>
+                          ))}
+                        </div>
+                      </AlertDescription>
+                    </Alert>
+                  </div>
+                )}
+
                 {/* Format Selection */}
                 <div className="space-y-3">
                   <Label className="text-gray-700 font-medium text-base">Format du fichier : Excel uniquement</Label>
