@@ -560,15 +560,32 @@ const Home = () => {
 
                 {/* Validation Error Display */}
                 {validationError && (
-                  <Alert className="bg-red-50 border-red-300">
-                    <XCircle className="w-5 h-5 text-red-600" />
-                    <AlertDescription className="text-red-800">
-                      <strong className="block mb-2">Erreurs de validation :</strong>
-                      <pre className="text-xs whitespace-pre-wrap font-mono bg-red-100 p-3 rounded">
-                        {validationError}
-                      </pre>
-                    </AlertDescription>
-                  </Alert>
+                  <div className="space-y-4">
+                    <Alert className="bg-red-50 border-red-300">
+                      <XCircle className="w-5 h-5 text-red-600" />
+                      <AlertDescription className="text-red-800">
+                        <strong className="block mb-2">Erreurs de validation :</strong>
+                        <pre className="text-xs whitespace-pre-wrap font-mono bg-red-100 p-3 rounded mb-3">
+                          {validationError}
+                        </pre>
+                        <div className="flex gap-3 mt-3">
+                          <Button
+                            onClick={resetFileUpload}
+                            className="bg-orange-500 hover:bg-orange-600 text-white"
+                          >
+                            Choisir un autre fichier
+                          </Button>
+                          <Button
+                            onClick={() => document.getElementById('file-upload').click()}
+                            variant="outline"
+                            className="border-orange-500 text-orange-600 hover:bg-orange-50"
+                          >
+                            Corriger et réessayer
+                          </Button>
+                        </div>
+                      </AlertDescription>
+                    </Alert>
+                  </div>
                 )}
               </CardContent>
             </Card>
