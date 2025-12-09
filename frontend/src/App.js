@@ -140,8 +140,15 @@ const Home = () => {
     const file = e.target.files[0];
     if (file) {
       setUploadedFile(file);
+      setValidationError(null); // Clear previous errors
       toast.success(`Fichier sélectionné: ${file.name}`);
     }
+  };
+
+  const resetFileUpload = () => {
+    setUploadedFile(null);
+    setValidationError(null);
+    toast.info("Prêt pour un nouveau fichier");
   };
 
   const submitImport = async () => {
