@@ -1267,10 +1267,15 @@ async def validate_list_values(
             logger.info(f"Recherche colonne pour: {field_path} (type: {list_type})")
             
             # Find matching column in Excel
+            # Try multiple matching strategies
             for idx, header in enumerate(excel_headers):
-                if header.strip() == field_path.strip() or field_path.strip() in header.strip():
+                header_clean = header.strip().lower()
+                field_clean = field_path.strip().lower()
+                
+                # Strategy 1: Exact match
+                if header_clean == field_clean:
                     allowed_vals = list_values_cache['lists'].get(list_type, [])
-                    logger.info(f"  -> Trouvé à l'index {idx}, {len(allowed_vals)} valeurs autorisées")
+                    logger.info(f"  -> Trouvé (exact) à l'index {idx}, {len(allowed_vals)} valeurs autorisées")
                     list_column_indices.append({
                         "col_idx": idx,
                         "field_path": field_path,
@@ -1278,6 +1283,80 @@ async def validate_list_values(
                         "allowed_values": allowed_vals
                     })
                     break
+                
+                # Strategy 2: Field path in header
+                if field_clean in header_clean:
+                    allowed_vals = list_values_cache['lists'].get(list_type, [])
+                    logger.info(f"  -> Trouvé (contenu) à l'index {idx}, {len(allowed_vals)} valeurs autorisées")
+                    list_column_indices.append({
+                        "col_idx": idx,
+                        "field_path": field_path,
+                        "list_type": list_type,
+                        "allowed_values": allowed_vals
+                    })
+                    break
+                
+                # Strategy 3: Extract last part after dot (e.g., "title.fr" from "internalExternal.title.fr")
+                # and check if it's in the header
+                if '.' in field_clean:
+                    field_suffix = field_clean.split('.')[-1]  # Get "fr"
+                    field_last_two = '.'.join(field_clean.split('.')[-2:])  # Get "title.fr"
+                    
+                    if field_last_two in header_clean or field_suffix in header_clean:
+                        # Additional check: verify the header is related to the list type
+                        # by checking if list type name parts are in header
+                        list_type_clean = list_type.lower()
+                        # Extract base name: "internalExternalList" -> "internal", "external"
+                        if 'internal' in field_clean and 'internal' in header_clean:
+                            allowed_vals = list_values_cache['lists'].get(list_type, [])
+                            logger.info(f"  -> Trouvé (suffix+context) à l'index {idx}, {len(allowed_vals)} valeurs autorisées")
+                            list_column_indices.append({
+                                "col_idx": idx,
+                                "field_path": field_path,
+                                "list_type": list_type,
+                                "allowed_values": allowed_vals
+                            })
+                            break
+                        elif 'civility' in field_clean and 'civilité' in header_clean:
+                            allowed_vals = list_values_cache['lists'].get(list_type, [])
+                            logger.info(f"  -> Trouvé (civility) à l'index {idx}, {len(allowed_vals)} valeurs autorisées")
+                            list_column_indices.append({
+                                "col_idx": idx,
+                                "field_path": field_path,
+                                "list_type": list_type,
+                                "allowed_values": allowed_vals
+                            })
+                            break
+                        elif 'function' in field_clean and 'fonction' in header_clean:
+                            allowed_vals = list_values_cache['lists'].get(list_type, [])
+                            logger.info(f"  -> Trouvé (function) à l'index {idx}, {len(allowed_vals)} valeurs autorisées")
+                            list_column_indices.append({
+                                "col_idx": idx,
+                                "field_path": field_path,
+                                "list_type": list_type,
+                                "allowed_values": allowed_vals
+                            })
+                            break
+                        elif 'department' in field_clean and 'direction' in header_clean:
+                            allowed_vals = list_values_cache['lists'].get(list_type, [])
+                            logger.info(f"  -> Trouvé (department) à l'index {idx}, {len(allowed_vals)} valeurs autorisées")
+                            list_column_indices.append({
+                                "col_idx": idx,
+                                "field_path": field_path,
+                                "list_type": list_type,
+                                "allowed_values": allowed_vals
+                            })
+                            break
+                        elif 'company' in field_clean and 'société' in header_clean:
+                            allowed_vals = list_values_cache['lists'].get(list_type, [])
+                            logger.info(f"  -> Trouvé (company) à l'index {idx}, {len(allowed_vals)} valeurs autorisées")
+                            list_column_indices.append({
+                                "col_idx": idx,
+                                "field_path": field_path,
+                                "list_type": list_type,
+                                "allowed_values": allowed_vals
+                            })
+                            break
         
         if not list_column_indices:
             logger.warning("Aucune colonne de liste trouvée dans Excel!")
