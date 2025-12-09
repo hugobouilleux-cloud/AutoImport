@@ -604,6 +604,35 @@ const Home = () => {
                     </Alert>
                   </div>
                 )}
+
+                {/* Import Success Display */}
+                {importResult && importResult.success && (
+                  <Alert className="bg-green-50 border-green-300">
+                    <CheckCircle2 className="w-5 h-5 text-green-600" />
+                    <AlertDescription className="text-green-800">
+                      <strong className="block mb-2">✅ Import réussi !</strong>
+                      <p className="mb-3">{importResult.message}</p>
+                      
+                      {importResult.result_file_name && (
+                        <div className="space-y-2">
+                          <p className="text-sm font-semibold">📊 Fichier de résultat disponible :</p>
+                          <div className="bg-white border border-green-200 rounded p-3">
+                            <p className="text-sm mb-2">{importResult.result_file_name}</p>
+                            <Button
+                              onClick={downloadResultFile}
+                              className="bg-green-600 hover:bg-green-700 text-white"
+                            >
+                              📥 Télécharger le fichier de résultat
+                            </Button>
+                          </div>
+                          <p className="text-xs text-green-700 mt-2">
+                            Ce fichier contient les détails de l'import avec les erreurs éventuelles pour chaque ligne.
+                          </p>
+                        </div>
+                      )}
+                    </AlertDescription>
+                  </Alert>
+                )}
               </CardContent>
             </Card>
           )}
