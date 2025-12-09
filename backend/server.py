@@ -1620,24 +1620,27 @@ async def import_to_legisway(
     login: str,
     password: str,
     selected_format: Dict,
+    excel_file_path: str,
     excel_data: Dict,
     table_config: Dict
 ) -> Dict:
     """
-    Import Excel data to Legisway using Playwright automation
+    Import Excel data to Legisway using Playwright automation with rollback test option
+    Returns the result file for user download
     """
     try:
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=True, args=['--no-sandbox', '--disable-setuid-sandbox'])
             context = await browser.new_context(
                 ignore_https_errors=True,
-                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                accept_downloads=True
             )
             page = await context.new_page()
             
             try:
-                # Navigate and login
-                logger.info("Connexion à Legisway...")
+                # Step 1: Navigate and login
+                logger.info("Connexion à Legisway pour import...")
                 await page.goto(site_url, timeout=30000, wait_until="load")
                 await asyncio.sleep(1)
                 
@@ -1650,25 +1653,161 @@ async def import_to_legisway(
                 await asyncio.sleep(0.5)
                 await page.click('button[type="submit"]', timeout=5000)
                 
-                await page.wait_for_load_state("domcontentloaded", timeout=30000)
+                await page.wait_for_load_state("load", timeout=30000)
+                await asyncio.sleep(3)
+                
+                # Step 2: Navigate to Import section
+                logger.info("Navigation vers Import de données...")
+                await page.wait_for_selector('.icon-user', timeout=10000)
+                await page.click('.icon-user', timeout=5000)
+                await asyncio.sleep(1)
+                
+                await page.wait_for_selector('button[mat-menu-item]', timeout=10000)
+                await page.click('button.user-menu-item:has-text("Administration")', timeout=5000)
+                await page.wait_for_load_state("load", timeout=30000)
+                await asyncio.sleep(3)
+                
+                await page.wait_for_selector('a:has-text("Import de données")', timeout=10000)
+                await page.click('a:has-text("Import de données")', timeout=10000)
+                await page.wait_for_load_state("load", timeout=30000)
+                await asyncio.sleep(3)
+                
+                # Step 3: Select format in combobox
+                logger.info(f"Sélection du format: {selected_format['name']}")
+                await page.wait_for_selector('kendo-combobox input.k-input-inner', timeout=10000)
+                await page.click('kendo-combobox input.k-input-inner')
+                await asyncio.sleep(1)
+                await page.fill('kendo-combobox input.k-input-inner', selected_format['name'])
+                await asyncio.sleep(1)
+                await page.keyboard.press('Enter')
                 await asyncio.sleep(2)
                 
-                logger.info(f"Import de {excel_data['total_rows']} lignes...")
+                # Step 4: Upload Excel file
+                logger.info("Upload du fichier Excel...")
+                # Find the file input (usually hidden in dropzone)
+                file_input = await page.query_selector('input[type="file"]')
+                if file_input:
+                    await file_input.set_input_files(excel_file_path)
+                    logger.info("Fichier uploadé via input")
+                else:
+                    logger.warning("Input file non trouvé, essai avec dropzone")
+                    # Alternative: try to trigger file input via dropzone click
+                    await page.click('.dropzone')
+                    await asyncio.sleep(1)
+                    file_input = await page.query_selector('input[type="file"]')
+                    if file_input:
+                        await file_input.set_input_files(excel_file_path)
                 
-                # TODO: Implement the actual import logic based on Legisway's interface
-                # This will need specific knowledge of how Legisway handles imports
-                # For now, we return success to show the flow works
+                await asyncio.sleep(2)
                 
-                await browser.close()
+                # Step 5: Open Advanced Options and select rollback
+                logger.info("Configuration du mode rollback...")
+                await page.wait_for_selector('button[aria-label*="Options Avancées"]', timeout=10000)
+                await page.click('button[aria-label*="Options Avancées"]')
+                await asyncio.sleep(1)
                 
-                return {
-                    "success": True,
-                    "message": f"Import terminé: {excel_data['total_rows']} lignes traitées",
-                    "rows_imported": excel_data['total_rows'],
-                    "headers_mapped": len(excel_data['headers'])
-                }
+                # Select rollback radio button
+                await page.wait_for_selector('mat-radio-button[value="with.rollback"] input', timeout=10000)
+                await page.click('mat-radio-button[value="with.rollback"] input')
+                await asyncio.sleep(1)
+                logger.info("Mode rollback activé")
+                
+                # Step 6: Click Import button
+                logger.info("Lancement de l'import...")
+                await page.wait_for_selector('button[type="submit"]:has-text("Importer"):not([disabled])', timeout=10000)
+                await page.click('button[type="submit"]:has-text("Importer")')
+                await asyncio.sleep(2)
+                
+                # Step 7: Wait for progress bar to complete
+                logger.info("Attente de la fin de l'import...")
+                # Wait for progress bar to appear
+                await page.wait_for_selector('mat-progress-bar', timeout=10000)
+                await asyncio.sleep(2)
+                
+                # Wait for progress to reach 100% or import to finish
+                # Check for completion message (success or failure)
+                max_wait_time = 3600  # 1 hour max
+                check_interval = 5
+                elapsed = 0
+                
+                while elapsed < max_wait_time:
+                    # Check if import finished (look for result file link or completion message)
+                    result_file = await page.query_selector('a[href*="result_file"]')
+                    completion_message = await page.query_selector('div:has-text("Import terminé"), div:has-text("Échec de l\'import")')
+                    
+                    if result_file or completion_message:
+                        logger.info("Import terminé!")
+                        break
+                    
+                    # Check progress percentage
+                    progress_label = await page.query_selector('mat-progress-bar + label')
+                    if progress_label:
+                        progress_text = await progress_label.text_content()
+                        logger.info(f"Progression: {progress_text}")
+                    
+                    await asyncio.sleep(check_interval)
+                    elapsed += check_interval
+                
+                if elapsed >= max_wait_time:
+                    await browser.close()
+                    return {
+                        "success": False,
+                        "message": "Timeout: l'import a pris plus d'1 heure"
+                    }
+                
+                await asyncio.sleep(2)
+                
+                # Step 8: Get result file
+                logger.info("Récupération du fichier de résultat...")
+                result_file_link = await page.query_selector('a[href*="result_file"]')
+                
+                if result_file_link:
+                    result_file_name = await result_file_link.text_content()
+                    result_file_href = await result_file_link.get_attribute('href')
+                    
+                    logger.info(f"Fichier de résultat: {result_file_name}")
+                    
+                    # Download the result file
+                    async with page.expect_download() as download_info:
+                        await result_file_link.click()
+                    download = await download_info.value
+                    
+                    # Save to downloads directory
+                    downloads_dir = Path("/tmp/downloads")
+                    downloads_dir.mkdir(exist_ok=True)
+                    result_file_path = downloads_dir / result_file_name.strip()
+                    
+                    await download.save_as(str(result_file_path))
+                    logger.info(f"Fichier de résultat sauvegardé: {result_file_path}")
+                    
+                    await browser.close()
+                    
+                    return {
+                        "success": True,
+                        "message": f"Import terminé avec rollback: {excel_data['total_rows']} lignes traitées",
+                        "rows_imported": excel_data['total_rows'],
+                        "result_file_path": str(result_file_path),
+                        "result_file_name": result_file_name.strip()
+                    }
+                else:
+                    # No result file found - check for error message
+                    error_message = await page.query_selector('div:has-text("Échec")')
+                    if error_message:
+                        error_text = await error_message.text_content()
+                        await browser.close()
+                        return {
+                            "success": False,
+                            "message": f"Import échoué: {error_text}"
+                        }
+                    else:
+                        await browser.close()
+                        return {
+                            "success": True,
+                            "message": f"Import terminé (pas de fichier de résultat disponible)"
+                        }
                 
             except Exception as e:
+                logger.error(f"Erreur pendant l'import: {str(e)}")
                 await browser.close()
                 raise e
                 
@@ -1677,15 +1816,6 @@ async def import_to_legisway(
         return {
             "success": False,
             "message": f"Erreur import Legisway: {str(e)}"
-        }
-        
-        return result
-        
-    except Exception as e:
-        logger.error(f"Import error: {str(e)}")
-        return {
-            "success": False,
-            "message": f"Erreur lors de l'import: {str(e)}"
         }
 
 # Include the router in the main app
