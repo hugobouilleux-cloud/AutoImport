@@ -143,6 +143,8 @@ const Home = () => {
       setValidationError(null); // Clear previous errors
       toast.success(`Fichier sélectionné: ${file.name}`);
     }
+    // Reset input value to allow selecting the same file again
+    e.target.value = null;
   };
 
   const resetFileUpload = () => {
