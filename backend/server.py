@@ -1018,6 +1018,7 @@ async def execute_import(
             login=login,
             password=password,
             selected_format=selected_format_data,
+            excel_file_path=str(file_path),
             excel_data=excel_data,
             table_config=table_config_data
         )
