@@ -1033,6 +1033,28 @@ async def execute_import(
             "message": f"Erreur lors de l'import: {str(e)}"
         }
 
+@api_router.get("/import/download-result/{filename}")
+async def download_result_file(filename: str):
+    """
+    Download the result file from Legisway import
+    """
+    try:
+        downloads_dir = Path("/tmp/downloads")
+        file_path = downloads_dir / filename
+        
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail="Fichier non trouvé")
+        
+        return FileResponse(
+            path=str(file_path),
+            filename=filename,
+            media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        
+    except Exception as e:
+        logger.error(f"Download error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 def read_excel_file(file_path: str) -> Dict:
     """
     Read Excel file and extract headers and rows
