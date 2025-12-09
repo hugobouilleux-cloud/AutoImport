@@ -189,10 +189,19 @@ const Home = () => {
       if (response.data.success) {
         toast.success(response.data.message);
         setValidationError(null);
+        setImportResult(response.data);
+        
+        // If there's a result file, show download option
+        if (response.data.result_file_name) {
+          toast.success("Fichier de résultat disponible !", {
+            duration: 8000,
+          });
+        }
       } else {
         // Show detailed error message
         const errorMsg = response.data.message;
         setValidationError(errorMsg);
+        setImportResult(null);
         toast.error("Validation échouée - Voir les détails ci-dessous", {
           duration: 5000,
         });
