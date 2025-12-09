@@ -568,19 +568,15 @@ const Home = () => {
                         <pre className="text-xs whitespace-pre-wrap font-mono bg-red-100 p-3 rounded mb-3">
                           {validationError}
                         </pre>
-                        <div className="flex gap-3 mt-3">
+                        <div className="mt-3">
                           <Button
-                            onClick={resetFileUpload}
+                            onClick={() => {
+                              setValidationError(null);
+                              document.getElementById('file-upload').click();
+                            }}
                             className="bg-orange-500 hover:bg-orange-600 text-white"
                           >
-                            Choisir un autre fichier
-                          </Button>
-                          <Button
-                            onClick={() => document.getElementById('file-upload').click()}
-                            variant="outline"
-                            className="border-orange-500 text-orange-600 hover:bg-orange-50"
-                          >
-                            Corriger et réessayer
+                            📄 Uploader un fichier corrigé
                           </Button>
                         </div>
                       </AlertDescription>
