@@ -151,7 +151,16 @@ const Home = () => {
   const resetFileUpload = () => {
     setUploadedFile(null);
     setValidationError(null);
+    setImportResult(null);
     toast.info("Prêt pour un nouveau fichier");
+  };
+
+  const downloadResultFile = () => {
+    if (importResult && importResult.result_file_name) {
+      const downloadUrl = `${API}/import/download-result/${encodeURIComponent(importResult.result_file_name)}`;
+      window.open(downloadUrl, '_blank');
+      toast.success("Téléchargement du fichier de résultat...");
+    }
   };
 
   const submitImport = async () => {
