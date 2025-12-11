@@ -273,60 +273,17 @@ async def navigate_to_admin(connection_data: ConnectionTest):
                 else:
                     logger.info("Déjà connecté, pas besoin de se reconnecter")
                 
-                # Étape 4: Cliquer sur l'icône utilisateur
-                try:
-                    # Chercher l'élément avec la classe icon-user
-                    await page.click('.icon-user', timeout=5000)
-                    await asyncio.sleep(1)
-                except Exception as e:
-                    # Essayer d'autres sélecteurs
-                    user_selectors = [
-                        'span.icon-user-without-picture',
-                        'span.icon-user',
-                        '[class*="icon-user"]',
-                        'button:has(.icon-user)'
-                    ]
-                    clicked = False
-                    for selector in user_selectors:
-                        try:
-                            await page.click(selector, timeout=2000)
-                            clicked = True
-                            await asyncio.sleep(1)
-                            break
-                        except:
-                            continue
-                    
-                    if not clicked:
-                        raise Exception(f"Impossible de cliquer sur l'icône utilisateur: {str(e)}")
+                # Étape 4 & 5: Cliquer sur l'icône utilisateur puis Administration
+                if not await click_user_icon_and_admin(page):
+                    await browser.close()
+                    return {
+                        "success": False,
+                        "message": "Impossible d'accéder au menu Administration"
+                    }
                 
-                # Étape 5: Cliquer sur "Administration" dans le menu
-                try:
-                    # Attendre que le menu apparaisse
-                    await page.wait_for_selector('button[mat-menu-item]', timeout=5000)
-                    
-                    # Cliquer sur Administration
-                    admin_selectors = [
-                        'button.user-menu-item:has-text("Administration")',
-                        'button[mat-menu-item]:has-text("Administration")',
-                        'span.user-menu-item-label:has-text("Administration")',
-                        '[class*="menu-item"]:has-text("Administration")'
-                    ]
-                    
-                    clicked_admin = False
-                    for selector in admin_selectors:
-                        try:
-                            await page.click(selector, timeout=2000)
-                            clicked_admin = True
-                            break
-                        except:
-                            continue
-                    
-                    if not clicked_admin:
-                        raise Exception("Impossible de cliquer sur Administration")
-                    
-                    # Attendre le chargement de la page d'administration
-                    await page.wait_for_load_state("load", timeout=30000)
-                    await asyncio.sleep(3)
+                # Attendre le chargement de la page d'administration
+                await page.wait_for_load_state("load", timeout=30000)
+                await asyncio.sleep(3)
                     
                     # Récupérer l'URL actuelle
                     current_url = page.url
