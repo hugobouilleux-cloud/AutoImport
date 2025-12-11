@@ -1749,12 +1749,12 @@ async def import_to_legisway(
                 
                 # Step 2: Navigate to Import section
                 logger.info("Navigation vers Import de données...")
-                await page.wait_for_selector('.icon-user', timeout=10000)
-                await page.click('.icon-user', timeout=5000)
-                await asyncio.sleep(1)
-                
-                await page.wait_for_selector('button[mat-menu-item]', timeout=10000)
-                await page.click('button.user-menu-item:has-text("Administration")', timeout=5000)
+                if not await click_user_icon_and_admin(page):
+                    await browser.close()
+                    return {
+                        "success": False,
+                        "message": "Impossible d'accéder au menu Administration"
+                    }
                 await page.wait_for_load_state("load", timeout=30000)
                 await asyncio.sleep(3)
                 
