@@ -1679,19 +1679,26 @@ async def import_to_legisway(
                 # Step 1: Navigate and login
                 logger.info("Connexion à Legisway pour import...")
                 await page.goto(site_url, timeout=30000, wait_until="load")
-                await asyncio.sleep(1)
+                await asyncio.sleep(2)
                 
-                await page.fill('input[name="j_username"]', login, timeout=5000)
-                await asyncio.sleep(0.5)
-                await page.fill('input[name="j_password"]', password, timeout=5000)
-                await asyncio.sleep(1)
+                # Check if already logged in
+                already_logged_in = await page.query_selector('.icon-user')
                 
-                await page.wait_for_selector('button[type="submit"]:not([disabled])', timeout=10000)
-                await asyncio.sleep(0.5)
-                await page.click('button[type="submit"]', timeout=5000)
-                
-                await page.wait_for_load_state("load", timeout=30000)
-                await asyncio.sleep(3)
+                if not already_logged_in:
+                    logger.info("Connexion requise...")
+                    await page.fill('input[name="j_username"]', login, timeout=5000)
+                    await asyncio.sleep(0.5)
+                    await page.fill('input[name="j_password"]', password, timeout=5000)
+                    await asyncio.sleep(1)
+                    
+                    await page.wait_for_selector('button[type="submit"]:not([disabled])', timeout=10000)
+                    await asyncio.sleep(0.5)
+                    await page.click('button[type="submit"]', timeout=5000)
+                    
+                    await page.wait_for_load_state("load", timeout=30000)
+                    await asyncio.sleep(3)
+                else:
+                    logger.info("Déjà connecté")
                 
                 # Step 2: Navigate to Import section
                 logger.info("Navigation vers Import de données...")
