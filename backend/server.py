@@ -519,9 +519,13 @@ async def select_format_in_table(request: SelectFormatRequest):
                 await page.fill('input[name="j_password"]', request.password, timeout=5000)
                 await asyncio.sleep(1)
                 
-                await page.wait_for_selector('button:has-text("Connexion")', timeout=10000)
-                await asyncio.sleep(0.5)
-                await page.click('button:has-text("Connexion")', timeout=5000)
+                if not await click_login_button(page):
+                    await browser.close()
+                    return {
+                        "success": False,
+                        "message": "Bouton de connexion non trouvé",
+                        "format_url": None
+                    }
                 
                 # Wait for login to complete - use 'load' instead of 'networkidle'
                 await page.wait_for_load_state("load", timeout=30000)
