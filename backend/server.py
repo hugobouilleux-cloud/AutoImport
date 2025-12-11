@@ -652,10 +652,13 @@ async def extract_format_table(request: SelectFormatRequest):
                 # Cliquer sur "Import de données"
                 if not await click_import_de_donnees(page):
                     await browser.close()
-                    return {
-                        "success": False,
-                        "message": "Impossible d'accéder à Import de données"
-                    }
+                    return TableExtractionResult(
+                        success=False,
+                        message="Impossible d'accéder à Import de données",
+                        headers=[],
+                        rows=[],
+                        total_rows=0
+                    )
                 await page.wait_for_load_state("load", timeout=30000)
                 await asyncio.sleep(3)
                 
