@@ -1843,10 +1843,29 @@ async def import_to_legisway(
                 await asyncio.sleep(1)
                 
                 # Select rollback radio button
-                await page.wait_for_selector('mat-radio-button[value="with.rollback"] input', timeout=10000)
-                await page.click('mat-radio-button[value="with.rollback"] input')
+                # Try clicking on the mat-radio-button itself instead of the input
+                rollback_selectors = [
+                    'mat-radio-button[value="with.rollback"]',
+                    'mat-radio-button[value="with.rollback"] label',
+                    'mat-radio-button[value="with.rollback"] .mat-radio-label'
+                ]
+                
+                rollback_clicked = False
+                for selector in rollback_selectors:
+                    try:
+                        await page.wait_for_selector(selector, timeout=3000)
+                        await page.click(selector, force=True)
+                        rollback_clicked = True
+                        logger.info(f"Mode rollback activé avec: {selector}")
+                        break
+                    except:
+                        continue
+                
+                if not rollback_clicked:
+                    logger.warning("Impossible de cliquer sur rollback, tentative avec force sur input")
+                    await page.click('mat-radio-button[value="with.rollback"] input', force=True)
+                
                 await asyncio.sleep(1)
-                logger.info("Mode rollback activé")
                 
                 # Step 6: Click Import button
                 logger.info("Lancement de l'import...")
