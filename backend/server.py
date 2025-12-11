@@ -1695,6 +1695,56 @@ async def click_login_button(page, browser=None):
     logger.error("Aucun bouton de connexion trouvé")
     return False
 
+async def click_user_icon_and_admin(page):
+    """
+    Helper function to click user icon and then Administration menu
+    Returns True if successful, False otherwise
+    """
+    # Click user icon
+    user_icon_selectors = [
+        '.icon-user',
+        '.icon-user-administration-dashboard',
+        'span.icon-user',
+        '[class*="icon-user"]'
+    ]
+    
+    user_icon_clicked = False
+    for selector in user_icon_selectors:
+        try:
+            await page.wait_for_selector(selector, timeout=3000)
+            await page.click(selector, timeout=5000)
+            logger.info(f"Icône utilisateur cliquée avec: {selector}")
+            user_icon_clicked = True
+            await asyncio.sleep(1)
+            break
+        except:
+            continue
+    
+    if not user_icon_clicked:
+        logger.error("Icône utilisateur non trouvée")
+        return False
+    
+    # Click Administration menu item
+    admin_selectors = [
+        'span[data-dropdown-menu-item]:has-text("Administration")',
+        'span.cg-dropdown-list-item:has-text("Administration")',
+        'button[mat-menu-item]:has-text("Administration")',
+        'button.user-menu-item:has-text("Administration")',
+        '[data-e2e="cg-dropdown-list-item"]:has-text("Administration")'
+    ]
+    
+    for selector in admin_selectors:
+        try:
+            await page.wait_for_selector(selector, timeout=3000)
+            await page.click(selector, timeout=5000)
+            logger.info(f"Administration cliqué avec: {selector}")
+            return True
+        except:
+            continue
+    
+    logger.error("Bouton Administration non trouvé")
+    return False
+
 async def import_to_legisway(
     site_url: str,
     login: str,
