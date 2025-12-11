@@ -359,8 +359,12 @@ async def extract_import_formats(connection_data: ConnectionTest):
                 await asyncio.sleep(3)
                 
                 # Étape 2: Cliquer sur "Import de données"
-                await page.wait_for_selector('a:has-text("Import de données")', timeout=10000)
-                await page.click('a:has-text("Import de données")', timeout=10000)
+                if not await click_import_de_donnees(page):
+                    await browser.close()
+                    return {
+                        "success": False,
+                        "message": "Impossible d'accéder à Import de données"
+                    }
                 await page.wait_for_load_state("load", timeout=30000)
                 await asyncio.sleep(3)
                 
@@ -495,8 +499,12 @@ async def select_format_in_table(request: SelectFormatRequest):
                 await asyncio.sleep(3)
                 
                 # Étape 2: Cliquer sur "Import de données"
-                await page.wait_for_selector('a:has-text("Import de données")', timeout=10000)
-                await page.click('a:has-text("Import de données")', timeout=10000)
+                if not await click_import_de_donnees(page):
+                    await browser.close()
+                    return {
+                        "success": False,
+                        "message": "Impossible d'accéder à Import de données"
+                    }
                 await page.wait_for_load_state("load", timeout=30000)
                 await asyncio.sleep(3)
                 
@@ -640,8 +648,12 @@ async def extract_format_table(request: SelectFormatRequest):
                 await asyncio.sleep(3)
                 
                 # Cliquer sur "Import de données"
-                await page.wait_for_selector('a:has-text("Import de données")', timeout=10000)
-                await page.click('a:has-text("Import de données")', timeout=10000)
+                if not await click_import_de_donnees(page):
+                    await browser.close()
+                    return {
+                        "success": False,
+                        "message": "Impossible d'accéder à Import de données"
+                    }
                 await page.wait_for_load_state("load", timeout=30000)
                 await asyncio.sleep(3)
                 
@@ -1782,8 +1794,12 @@ async def import_to_legisway(
                 await page.wait_for_load_state("load", timeout=30000)
                 await asyncio.sleep(3)
                 
-                await page.wait_for_selector('a:has-text("Import de données")', timeout=10000)
-                await page.click('a:has-text("Import de données")', timeout=10000)
+                if not await click_import_de_donnees(page):
+                    await browser.close()
+                    return {
+                        "success": False,
+                        "message": "Impossible d'accéder à Import de données"
+                    }
                 await page.wait_for_load_state("load", timeout=30000)
                 await asyncio.sleep(3)
                 
