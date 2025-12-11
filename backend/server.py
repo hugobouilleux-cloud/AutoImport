@@ -1677,6 +1677,32 @@ async def fetch_list_values_from_legisway(
             "lists": {}
         }
 
+async def click_login_button(page, browser=None):
+    """
+    Helper function to click the login button with multiple selector attempts
+    Returns True if successful, False otherwise
+    """
+    selectors_to_try = [
+        'button:has-text("Connexion")',
+        'button.button-large:has-text("Connexion")',
+        'button[data-kind="button"]:has-text("Connexion")',
+        'button.button-large-with-label',
+        'button[type="button"]:has-text("Connexion")'
+    ]
+    
+    for selector in selectors_to_try:
+        try:
+            await page.wait_for_selector(selector, timeout=3000)
+            logger.info(f"Bouton connexion trouvé avec: {selector}")
+            await asyncio.sleep(0.5)
+            await page.click(selector, timeout=5000)
+            return True
+        except Exception as e:
+            continue
+    
+    logger.error("Aucun bouton de connexion trouvé")
+    return False
+
 async def import_to_legisway(
     site_url: str,
     login: str,
