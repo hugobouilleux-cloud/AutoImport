@@ -363,7 +363,8 @@ async def extract_import_formats(connection_data: ConnectionTest):
                     await browser.close()
                     return {
                         "success": False,
-                        "message": "Impossible d'accéder à Import de données"
+                        "message": "Impossible d'accéder à Import de données",
+                        "formats": []
                     }
                 await page.wait_for_load_state("load", timeout=30000)
                 await asyncio.sleep(3)
