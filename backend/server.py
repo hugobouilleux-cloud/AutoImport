@@ -1380,6 +1380,16 @@ async def validate_list_values(
                                 "allowed_values": allowed_vals
                             })
                             break
+                        elif 'internalexternal' in field_clean and ('groupe' in header_clean or 'hors' in header_clean):
+                            allowed_vals = list_values_cache['lists'].get(list_type, [])
+                            logger.info(f"  -> Trouvé (internalExternal/Groupe) à l'index {idx}, {len(allowed_vals)} valeurs autorisées")
+                            list_column_indices.append({
+                                "col_idx": idx,
+                                "field_path": field_path,
+                                "list_type": list_type,
+                                "allowed_values": allowed_vals
+                            })
+                            break
         
         if not list_column_indices:
             logger.warning("Aucune colonne de liste trouvée dans Excel!")
