@@ -1646,6 +1646,30 @@ async def click_login_button(page, browser=None):
     logger.error("Aucun bouton de connexion trouvé")
     return False
 
+async def click_import_de_donnees(page):
+    """
+    Helper function to click "Import de données" menu item
+    Returns True if successful, False otherwise
+    """
+    selectors = [
+        'button[data-kind="vertical-menu-item"]:has-text("Import de données")',
+        'button:has-text("Import de données")',
+        'a:has-text("Import de données")',
+        '[data-kind="vertical-menu-item"]:has-text("Import de données")'
+    ]
+    
+    for selector in selectors:
+        try:
+            await page.wait_for_selector(selector, timeout=3000)
+            await page.click(selector, timeout=5000)
+            logger.info(f"Import de données cliqué avec: {selector}")
+            return True
+        except:
+            continue
+    
+    logger.error("Bouton 'Import de données' non trouvé")
+    return False
+
 async def click_user_icon_and_admin(page):
     """
     Helper function to click user icon and then Administration menu
