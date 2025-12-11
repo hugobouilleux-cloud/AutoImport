@@ -1734,9 +1734,12 @@ async def import_to_legisway(
                     await page.fill('input[name="j_password"]', password, timeout=5000)
                     await asyncio.sleep(1)
                     
-                    await page.wait_for_selector('button:has-text("Connexion")', timeout=10000)
-                    await asyncio.sleep(0.5)
-                    await page.click('button:has-text("Connexion")', timeout=5000)
+                    if not await click_login_button(page):
+                        await browser.close()
+                        return {
+                            "success": False,
+                            "message": "Bouton de connexion non trouvé"
+                        }
                     
                     await page.wait_for_load_state("load", timeout=30000)
                     await asyncio.sleep(3)
