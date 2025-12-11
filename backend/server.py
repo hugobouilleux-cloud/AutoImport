@@ -504,7 +504,8 @@ async def select_format_in_table(request: SelectFormatRequest):
                     await browser.close()
                     return {
                         "success": False,
-                        "message": "Impossible d'accéder à Import de données"
+                        "message": "Impossible d'accéder à Import de données",
+                        "format_url": None
                     }
                 await page.wait_for_load_state("load", timeout=30000)
                 await asyncio.sleep(3)
