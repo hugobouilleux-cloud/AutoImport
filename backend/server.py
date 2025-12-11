@@ -1758,8 +1758,8 @@ async def import_to_legisway(
                 
                 # Step 6: Click Import button
                 logger.info("Lancement de l'import...")
-                await page.wait_for_selector('button[type="submit"]:has-text("Importer"):not([disabled])', timeout=10000)
-                await page.click('button[type="submit"]:has-text("Importer")')
+                await page.wait_for_selector('button:has-text("Importer"):not([disabled])', timeout=10000)
+                await page.click('button:has-text("Importer")')
                 await asyncio.sleep(2)
                 
                 # Step 7: Wait for progress bar to complete
