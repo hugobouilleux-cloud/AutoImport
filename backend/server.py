@@ -260,9 +260,34 @@ async def navigate_to_admin(connection_data: ConnectionTest):
                     await asyncio.sleep(1)
                     
                     # Étape 3: Attendre que le bouton soit activé et cliquer
-                    await page.wait_for_selector('button:has-text("Connexion")', timeout=10000)
+                    # Try multiple selectors for the login button
+                    login_button = None
+                    selectors_to_try = [
+                        'button:has-text("Connexion")',
+                        'button.button-large:has-text("Connexion")',
+                        'button[data-kind="button"]:has-text("Connexion")',
+                        'button.button-large-with-label',
+                        'button[type="button"]:has-text("Connexion")'
+                    ]
+                    
+                    for selector in selectors_to_try:
+                        try:
+                            await page.wait_for_selector(selector, timeout=3000)
+                            login_button = selector
+                            logger.info(f"Bouton trouvé avec: {selector}")
+                            break
+                        except:
+                            continue
+                    
+                    if not login_button:
+                        await browser.close()
+                        return {
+                            "success": False,
+                            "message": "Bouton de connexion non trouvé"
+                        }
+                    
                     await asyncio.sleep(0.5)
-                    await page.click('button:has-text("Connexion")', timeout=5000)
+                    await page.click(login_button, timeout=5000)
                     
                     # Attendre la navigation
                     await page.wait_for_load_state("load", timeout=30000)
