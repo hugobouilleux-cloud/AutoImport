@@ -514,7 +514,7 @@ async def select_format_in_table(request: SelectFormatRequest):
                 
                 await page.wait_for_selector('button:has-text("Connexion")', timeout=10000)
                 await asyncio.sleep(0.5)
-                await page.click('button[type="submit"]', timeout=5000)
+                await page.click('button:has-text("Connexion")', timeout=5000)
                 
                 # Wait for login to complete - use 'load' instead of 'networkidle'
                 await page.wait_for_load_state("load", timeout=30000)
@@ -654,7 +654,7 @@ async def extract_format_table(request: SelectFormatRequest):
                 
                 await page.wait_for_selector('button:has-text("Connexion")', timeout=10000)
                 await asyncio.sleep(0.5)
-                await page.click('button[type="submit"]', timeout=5000)
+                await page.click('button:has-text("Connexion")', timeout=5000)
                 
                 # Wait for login to complete - use 'load' instead of 'networkidle'
                 await page.wait_for_load_state("load", timeout=30000)
