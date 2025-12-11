@@ -949,11 +949,18 @@ async def execute_import(
         table_config_data = json.loads(table_config)
         reference_lists_data = json.loads(reference_lists) if reference_lists else None
         
-        # Save uploaded file temporarily
+        # Save uploaded file temporarily with timestamp to avoid cache
         upload_dir = Path("/tmp/uploads")
         upload_dir.mkdir(exist_ok=True)
         
-        file_path = upload_dir / file.filename
+        # Add timestamp to filename to ensure uniqueness
+        import time
+        timestamp = int(time.time() * 1000)
+        file_stem = Path(file.filename).stem
+        file_extension = Path(file.filename).suffix
+        unique_filename = f"{file_stem}_{timestamp}{file_extension}"
+        
+        file_path = upload_dir / unique_filename
         with open(file_path, "wb") as f:
             content = await file.read()
             f.write(content)
