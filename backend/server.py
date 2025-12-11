@@ -284,24 +284,20 @@ async def navigate_to_admin(connection_data: ConnectionTest):
                 # Attendre le chargement de la page d'administration
                 await page.wait_for_load_state("load", timeout=30000)
                 await asyncio.sleep(3)
-                    
-                    # Récupérer l'URL actuelle
-                    current_url = page.url
-                    
-                    # Prendre un screenshot pour vérification
-                    screenshot = await page.screenshot(full_page=False)
-                    
-                    await browser.close()
-                    
-                    return {
-                        "success": True,
-                        "message": "Navigation vers l'administration réussie",
-                        "admin_url": current_url
-                    }
-                    
-                except Exception as e:
-                    await browser.close()
-                    raise Exception(f"Erreur lors de la navigation vers l'administration: {str(e)}")
+                
+                # Récupérer l'URL actuelle
+                current_url = page.url
+                
+                # Prendre un screenshot pour vérification
+                screenshot = await page.screenshot(full_page=False)
+                
+                await browser.close()
+                
+                return {
+                    "success": True,
+                    "message": "Navigation vers l'administration réussie",
+                    "admin_url": current_url
+                }
                 
             except Exception as e:
                 await browser.close()
