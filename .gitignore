@@ -87,3 +87,7 @@ backend/playwright-browsers/chromium-1187/chrome-linux/chrome
 # Environment files
 *.env
 *.env.*
+-e 
+# Environment files
+*.env
+*.env.*
